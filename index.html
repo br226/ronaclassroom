@@ -689,7 +689,7 @@ td .g-in:focus{border-color:var(--red-soft);box-shadow:0 0 0 3px var(--red-tint)
       <button class="btn btn-primary btn-lg" onclick="openAuth('up')" data-i18n="getStarted">Get started</button>
       <button class="btn btn-ghost btn-lg" onclick="document.getElementById('learn').scrollIntoView()" data-i18n="learnMore">Learn more</button>
     </div>
-    <div class="scroll-cue"><div class="mouse"></div><span data-i18n="scroll">Scroll</span></div>
+   
   </section>
 
   <section class="sect" id="learn">
@@ -1078,7 +1078,7 @@ function confetti(n){
 /* ============================================================
    AUTH
    ============================================================ */
-const TEACHER_CODE='xqcz74';
+const TEACHER_CODE='';
 const SUBJECTS=['English','Mathematics','Science','Kurdish','Arabic','Physics','Chemistry','Biology','History','Geography','Computer','Islamic studies','Art','Sport','Music','Other'];
 
 function openAuth(mode){
@@ -2553,6 +2553,122 @@ function raceEnd(){
   </div></div>`;
   if(pct>=50){confetti(120);SFX.win()}
 }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ============================ SUPABASE LAYER ============================ */
+(function(){
+const SB_URL='https://ghwssfqrygtdldclqcax.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdod3NzZnFyeWd0ZGxkY2xxY2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTE1MDcsImV4cCI6MjEwNzgyNzUwN30.As0cZi_u1KfSlEufYzXHZkPNj5EHluE-B9ZoB-snIyE'; /* anon key: public by design, RLS protects the data */
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const PREF='rona_cp_prefs';
+const synced=new Map();
+let timer=null,failed=false;
+
+/* hide the landing page until we know whether a session exists */
+document.documentElement.classList.add('booting');
+const st=document.createElement('style');st.textContent='html.booting #landing{visibility:hidden}';document.head.appendChild(st);
+
+Object.assign(I18N.en,{syncErr:'Could not save to the server, retrying…',confirmEmail:'Check your email to confirm your account, then sign in.',errBadLogin:'Wrong email or password.'});
+Object.assign(I18N.ar,{syncErr:'تعذّر الحفظ على الخادم، تتم إعادة المحاولة…',confirmEmail:'تحقق من بريدك لتأكيد حسابك ثم سجّل الدخول.',errBadLogin:'البريد أو كلمة المرور غير صحيحة.'});
+Object.assign(I18N.ku,{syncErr:'پاشەکەوتکردن لەسەر سێرڤەر سەرکەوتوو نەبوو، دووبارە هەوڵ دەدرێتەوە…',confirmEmail:'ئیمەیڵەکەت بپشکنە بۆ پشتڕاستکردنەوەی هەژمارەکەت، پاشان بچۆ ژوورەوە.',errBadLogin:'ئیمەیڵ یان وشەی نهێنی هەڵەیە.'});
+
+const DEF=()=>({students:[],exercises:[],games:[],plays:[],grades:{},tests:[],log:[]});
+function ser(c){const {id,teacherId,name,grade,icon,created,...data}=c;return{id,teacher_id:teacherId,name,grade:grade||'',icon:icon||'🏫',data:{...data,created}}}
+function deser(r){return Object.assign(DEF(),r.data||{},{id:r.id,teacherId:r.teacher_id,name:r.name,grade:r.grade,icon:r.icon})}
+const readPref=()=>{try{return JSON.parse(localStorage.getItem(PREF)||'{}')}catch(e){return{}}};
+const writePref=o=>{try{localStorage.setItem(PREF,JSON.stringify(o))}catch(e){}};
+
+/* ---- storage: language stays on the device, everything else goes to Supabase ---- */
+window.load=function(){const p=readPref();if(p.lang)DB.lang=p.lang};
+window.save=function(){
+  writePref({lang:DB.lang,last:(DB.session&&DB.session.classId)||null});
+  if(!DB.session)return;
+  clearTimeout(timer);timer=setTimeout(flush,700);
+};
+async function flush(){
+  clearTimeout(timer);timer=null;
+  if(!DB.session)return;
+  const rows=[];
+  for(const c of DB.classes){const r=ser(c),j=JSON.stringify(r);if(synced.get(c.id)!==j)rows.push([c.id,r,j])}
+  if(!rows.length)return;
+  const {error}=await sb.from('classes').upsert(rows.map(x=>x[1]),{onConflict:'id'});
+  if(error){console.warn('sync failed',error);if(!failed){failed=true;toast(t('syncErr'),'bad')}timer=setTimeout(flush,8000);return}
+  failed=false;rows.forEach(x=>synced.set(x[0],x[2]));
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
+window.addEventListener('pagehide',flush);
+
+async function hydrate(user){
+  const [p,c]=await Promise.all([
+    sb.from('teachers').select('name,subject').eq('id',user.id).maybeSingle(),
+    sb.from('classes').select('*').order('created_at')]);
+  if(p.error||c.error)throw(p.error||c.error);
+  const m=user.user_metadata||{};
+  DB.teachers=[{id:user.id,name:(p.data&&p.data.name)||m.full_name||user.email,email:user.email,subject:(p.data&&p.data.subject)||m.subject||''}];
+  DB.classes=c.data.map(deser);
+  synced.clear();DB.classes.forEach(x=>synced.set(x.id,JSON.stringify(ser(x))));
+  DB.session={teacherId:user.id,classId:null};
+}
+const busy=on=>{const b=document.getElementById('authGo');if(b)b.disabled=on};
+
+/* ---- auth ---- */
+window.doSignUp=async function(){
+  const name=val('aName'),mail=val('aMail').toLowerCase(),sub=val('aSub'),pw=val('aPw'),pw2=val('aPw2'),code=val('aCode');
+  if(!name||!mail||!pw||!pw2||!code)return authErr(t('errFill'));
+  if(!/^\S+@\S+\.\S+$/.test(mail))return authErr(t('errEmail'));
+  if(pw.length<6)return authErr(t('errPwShort'));
+  if(pw!==pw2)return authErr(t('errPwMatch'));
+  busy(true);
+  const {data,error}=await sb.auth.signUp({email:mail,password:pw,options:{data:{full_name:name,subject:sub,teacher_code:code}}});
+  busy(false);
+  if(error){const m=error.message||'';
+    return authErr(/already|registered/i.test(m)?t('errEmailUsed'):/database error|teacher/i.test(m)?t('errCode'):esc(m))}
+  if(!data.session){document.getElementById('authErr').innerHTML='<div class="ok-note">'+t('confirmEmail')+'</div>';return}
+  try{await hydrate(data.user)}catch(e){return authErr(esc(e.message||String(e)))}
+  SFX.right();closeSheet();openClassPicker(true);
+};
+window.doSignIn=async function(){
+  const mail=val('aMail').toLowerCase(),pw=val('aPw');
+  if(!mail||!pw)return authErr(t('errFill'));
+  busy(true);
+  const {data,error}=await sb.auth.signInWithPassword({email:mail,password:pw});
+  busy(false);
+  if(error){const m=error.message||'';
+    return authErr(/confirm/i.test(m)?t('confirmEmail'):/invalid/i.test(m)?t('errBadLogin'):esc(m))}
+  try{await hydrate(data.user)}catch(e){return authErr(esc(e.message||String(e)))}
+  SFX.pop();closeSheet();openClassPicker(true);
+};
+window.signOut=async function(){
+  await flush();
+  try{await sb.auth.signOut()}catch(e){}
+  DB.session=null;DB.teachers=[];DB.classes=[];synced.clear();gradesUnlocked=false;
+  writePref({lang:DB.lang});
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('landing').style.display='';
+  window.scrollTo(0,0);closeMenu();
+};
+/* grade book: re-check the real account password with Supabase */
+window.tryUnlock=async function(){
+  const pw=val('lockPw');if(!pw)return;
+  const {error}=await sb.auth.signInWithPassword({email:teacher().email,password:pw});
+  if(!error){gradesUnlocked=true;SFX.right();render()}
+  else{document.getElementById('lockErr').innerHTML='<div class="err">'+t('wrongPw')+'</div>';SFX.wrong()}
+};
+
+/* ---- resume an existing session on page load ---- */
+(async function resume(){
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(session){
+      await hydrate(session.user);
+      const last=readPref().last;
+      if(last&&DB.classes.some(c=>c.id===last))enterClass(last);else openClassPicker(true);
+    }
+  }catch(e){console.warn('resume failed',e)}
+  document.documentElement.classList.remove('booting');
+})();
+})();
 </script>
 <script>
 /* ============================================================
