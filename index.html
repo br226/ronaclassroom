@@ -1,0 +1,2600 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rona Classroom+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RONA CLASSROOM+  —  prototype (no backend, localStorage only)
+   ============================================================ */
+:root{
+  --red-ink:#6d1b26;
+  --red:#9b2230;
+  --red-soft:#b6333f;
+  --red-pale:#e2b0b0;
+  --red-tint:#f8e9e7;
+  --red-wash:#fdf7f5;
+
+  --yel-ink:#b98a1e;
+  --yel:#e0b354;
+  --yel-soft:#eccf8e;
+  --yel-tint:#fdf5e4;
+
+  --ink:#33292b;
+  --ink-2:#6b5c5e;
+  --muted:#9b8c8e;
+  --line:#efe3e4;
+  --card:#ffffff;
+  --bg:#fdfafa;
+
+  --good:#5c9b78;
+  --good-tint:#e8f3ed;
+  --bad:#b8434e;
+  --bad-tint:#fbeae9;
+
+  --r-sm:10px; --r:16px; --r-lg:24px; --r-xl:34px;
+  --sh-1:0 2px 10px rgba(109,27,38,.06);
+  --sh-2:0 10px 30px rgba(109,27,38,.10);
+  --sh-3:0 24px 60px rgba(109,27,38,.16);
+  --ff:'Nunito',system-ui,-apple-system,Segoe UI,sans-serif;
+  --ff-ar:'Noto Kufi Arabic','Nunito',system-ui,sans-serif;
+  --nav-h:66px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--ff);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.55;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+}
+body.lang-ar,body.lang-ku{font-family:var(--ff-ar)}
+button,input,select,textarea{font-family:inherit;font-size:1rem;color:inherit}
+button{cursor:pointer;border:none;background:none}
+input,select,textarea{font-size:16px} /* stops iOS zoom-on-tap */
+h1,h2,h3,h4{margin:0;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+p{margin:0}
+::selection{background:var(--red-pale)}
+.hidden{display:none !important}
+
+/* scrollbars */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:var(--red-pale);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- shared bits ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:99px;font-weight:800;font-size:.95rem;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,background .18s,color .18s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.95)}
+.btn-primary{background:linear-gradient(135deg,var(--red-soft),var(--red));color:#fff;box-shadow:0 8px 20px rgba(155,34,48,.22)}
+.btn-primary:hover{box-shadow:0 12px 26px rgba(155,34,48,.3);transform:translateY(-2px)}
+.btn-yel{background:linear-gradient(135deg,var(--yel-soft),var(--yel));color:#6b4f12;box-shadow:0 8px 20px rgba(224,179,84,.28)}
+.btn-yel:hover{transform:translateY(-2px)}
+.btn-soft{background:var(--red-tint);color:var(--red-ink)}
+.btn-soft:hover{background:var(--red-pale)}
+.btn-ghost{background:transparent;color:var(--ink-2);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--red-pale);color:var(--red)}
+.btn-sm{padding:8px 15px;font-size:.85rem}
+.btn-lg{padding:16px 34px;font-size:1.06rem}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-1)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;background:var(--red-tint);color:var(--red-ink);font-size:.78rem;font-weight:800}
+.chip-yel{background:var(--yel-tint);color:var(--yel-ink)}
+.chip-good{background:var(--good-tint);color:var(--good)}
+.field{display:block;margin-bottom:14px}
+.field>span{display:block;font-size:.82rem;font-weight:800;color:var(--ink-2);margin-bottom:6px}
+.input{
+  width:100%;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);
+  background:#fff;transition:border-color .18s,box-shadow .18s;outline:none;
+}
+.input:focus{border-color:var(--red-soft);box-shadow:0 0 0 4px var(--red-tint)}
+textarea.input{resize:vertical;min-height:80px;line-height:1.5}
+select.input{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239b8c8e' stroke-width='3' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;background-size:16px;padding-right:40px}
+[dir="rtl"] select.input{background-position:left 14px center;padding-right:16px;padding-left:40px}
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .big{font-size:3rem;margin-bottom:8px;opacity:.7}
+.empty h3{color:var(--ink-2);margin-bottom:6px}
+
+/* ============================================================
+   LANDING
+   ============================================================ */
+#landing{position:relative}
+.land-top{
+  position:fixed;top:0;inset-inline:0;z-index:40;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 26px;transition:all .3s;
+}
+.land-top.solid{background:rgba(253,250,250,.86);backdrop-filter:blur(14px);box-shadow:var(--sh-1);padding:10px 26px}
+.land-top .mini{display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-6px);transition:all .35s}
+.land-top.solid .mini{opacity:1;transform:none}
+.land-top .mini b{font-weight:900;color:var(--red-ink)}
+
+.hero{
+  min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:90px 22px 60px;position:relative;overflow:hidden;
+}
+.hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55}
+.b1{width:46vw;height:46vw;background:var(--red-tint);top:-12vw;inset-inline-start:-10vw;animation:drift 18s ease-in-out infinite}
+.b2{width:38vw;height:38vw;background:var(--yel-tint);bottom:-10vw;inset-inline-end:-8vw;animation:drift 22s ease-in-out infinite reverse}
+.b3{width:28vw;height:28vw;background:#faeeea;top:40%;inset-inline-end:18%;animation:drift 26s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4%,6%) scale(1.09)}}
+.hero>*{position:relative;z-index:1}
+
+.logo-wrap{
+  width:min(200px,42vw);margin-bottom:26px;
+  animation:logoPop 1.15s cubic-bezier(.22,1.3,.36,1) both;
+}
+@keyframes logoPop{
+  0%{opacity:0;transform:scale(.55) translateY(34px) rotate(-7deg);filter:blur(8px)}
+  60%{opacity:1;filter:blur(0)}
+  100%{opacity:1;transform:scale(1) translateY(0) rotate(0)}
+}
+.logo-wrap img{width:100%;height:auto;display:block;filter:drop-shadow(0 14px 28px rgba(109,27,38,.18))}
+.hero h1{
+  font-size:clamp(2.6rem,8.5vw,5rem);font-weight:900;letter-spacing:-.035em;
+  background:linear-gradient(120deg,var(--red-ink),var(--red) 55%,#b6333f);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:rise .9s cubic-bezier(.2,.9,.3,1) .45s both;
+}
+.hero h1 .plus{color:var(--yel);-webkit-text-fill-color:var(--yel)}
+.hero .tag{
+  margin-top:14px;font-size:clamp(1rem,3.4vw,1.25rem);color:var(--ink-2);max-width:620px;font-weight:600;
+  animation:rise .9s cubic-bezier(.2,.9,.3,1) .62s both;
+}
+.hero .hero-cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;justify-content:center;animation:rise .9s cubic-bezier(.2,.9,.3,1) .78s both}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.scroll-cue{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);
+  font-size:.76rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  animation:rise .9s 1.1s both;
+}
+.scroll-cue .mouse{width:24px;height:38px;border:2.5px solid var(--red-pale);border-radius:14px;position:relative}
+.scroll-cue .mouse::after{content:"";position:absolute;top:7px;left:50%;width:4px;height:7px;border-radius:3px;background:var(--red-soft);transform:translateX(-50%);animation:wheel 1.6s ease-in-out infinite}
+@keyframes wheel{0%{opacity:0;transform:translate(-50%,0)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,13px)}}
+
+.sect{max-width:1080px;margin:0 auto;padding:clamp(60px,10vw,110px) 22px}
+.sect-head{text-align:center;max-width:640px;margin:0 auto clamp(34px,6vw,54px)}
+.sect-head h2{font-size:clamp(1.8rem,5.2vw,2.8rem);color:var(--red-ink);margin-bottom:12px}
+.sect-head p{color:var(--ink-2);font-size:clamp(1rem,2.6vw,1.1rem)}
+.reveal{opacity:0;transform:translateY(38px);transition:opacity .85s cubic-bezier(.2,.9,.3,1),transform .85s cubic-bezier(.2,.9,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:18px}
+.feat{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:26px;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1),box-shadow .3s,border-color .3s;
+}
+.feat:hover{transform:translateY(-7px);box-shadow:var(--sh-2);border-color:var(--red-pale)}
+.feat .ic{
+  width:54px;height:54px;border-radius:18px;display:grid;place-items:center;font-size:1.6rem;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--red-tint),var(--yel-tint));
+}
+.feat h3{font-size:1.16rem;color:var(--red-ink);margin-bottom:7px}
+.feat p{color:var(--ink-2);font-size:.95rem}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;counter-reset:s}
+.step{position:relative;padding:26px 22px 22px;background:var(--red-wash);border-radius:var(--r-lg);border:1.5px solid var(--red-tint)}
+.step .n{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,var(--red-soft),var(--red));margin-bottom:12px;box-shadow:0 6px 14px rgba(155,34,48,.2);
+}
+.step h4{color:var(--red-ink);margin-bottom:6px;font-size:1.03rem}
+.step p{font-size:.92rem;color:var(--ink-2)}
+
+.cta-band{
+  max-width:1080px;margin:0 auto clamp(60px,9vw,100px);padding:clamp(38px,7vw,64px) 26px;text-align:center;
+  background:linear-gradient(135deg,var(--red-wash),var(--yel-tint));
+  border:1.5px solid var(--red-tint);border-radius:var(--r-xl);
+}
+.cta-band h2{font-size:clamp(1.6rem,4.6vw,2.4rem);color:var(--red-ink);margin-bottom:10px}
+.cta-band p{color:var(--ink-2);margin-bottom:24px}
+.land-foot{text-align:center;padding:26px;color:var(--muted);font-size:.84rem;border-top:1.5px solid var(--line)}
+
+/* language pill */
+.lang-pill{display:flex;gap:3px;padding:4px;background:rgba(255,255,255,.75);border:1.5px solid var(--line);border-radius:99px;backdrop-filter:blur(8px)}
+.lang-pill button{padding:6px 13px;border-radius:99px;font-size:.8rem;font-weight:800;color:var(--ink-2);transition:all .2s}
+.lang-pill button.on{background:linear-gradient(135deg,var(--red-soft),var(--red));color:#fff}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.ov{
+  position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;
+  background:rgba(58,18,25,.45);backdrop-filter:blur(7px);overflow-y:auto;
+}
+.ov.show{display:flex;animation:ovIn .25s ease both}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+.sheet{
+  width:100%;max-width:470px;background:#fff;border-radius:var(--r-xl);padding:30px;
+  box-shadow:var(--sh-3);animation:sheetIn .38s cubic-bezier(.22,1.3,.36,1) both;margin:auto;
+}
+.sheet.wide{max-width:720px}
+.sheet.xwide{max-width:940px}
+@keyframes sheetIn{from{opacity:0;transform:translateY(26px) scale(.95)}to{opacity:1;transform:none}}
+.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+.sheet-head h3{font-size:1.4rem;color:var(--red-ink)}
+.sheet-head p{font-size:.9rem;color:var(--muted);margin-top:4px}
+.x{width:36px;height:36px;border-radius:50%;background:var(--red-wash);color:var(--ink-2);font-size:1.1rem;display:grid;place-items:center;flex:0 0 auto;transition:all .2s}
+.x:hover{background:var(--red-tint);color:var(--red)}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--red-wash);border-radius:99px;margin-bottom:22px}
+.tabs button{flex:1;padding:11px;border-radius:99px;font-weight:800;font-size:.9rem;color:var(--ink-2);transition:all .22s}
+.tabs button.on{background:#fff;color:var(--red);box-shadow:var(--sh-1)}
+.err{background:var(--bad-tint);color:var(--bad);padding:11px 15px;border-radius:12px;font-size:.87rem;font-weight:700;margin-bottom:14px}
+.ok-note{background:var(--good-tint);color:var(--good);padding:11px 15px;border-radius:12px;font-size:.87rem;font-weight:700;margin-bottom:14px}
+.hint{font-size:.78rem;color:var(--muted);margin-top:5px}
+
+/* class picker */
+.class-list{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto;margin-bottom:16px}
+.class-row{
+  display:flex;align-items:center;gap:14px;padding:15px 18px;border-radius:18px;border:1.5px solid var(--line);
+  background:#fff;transition:all .2s;text-align:start;width:100%;
+}
+.class-row:hover{border-color:var(--red-soft);background:var(--red-wash);transform:translateX(4px)}
+[dir="rtl"] .class-row:hover{transform:translateX(-4px)}
+.class-row .av{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.3rem;background:linear-gradient(135deg,var(--red-tint),var(--yel-tint));flex:0 0 auto}
+.class-row .nm{font-weight:800;color:var(--ink)}
+.class-row .sub{font-size:.8rem;color:var(--muted)}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.show{display:flex}
+.topbar{
+  position:sticky;top:0;z-index:50;height:var(--nav-h);display:flex;align-items:center;gap:14px;
+  padding:0 18px;background:rgba(255,255,255,.88);backdrop-filter:blur(16px);border-bottom:1.5px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.brand #navLogo{width:30px;height:36px;display:block;flex:0 0 auto}
+.brand b{font-weight:900;color:var(--red-ink);font-size:1.02rem;white-space:nowrap}
+.brand b i{color:var(--yel);font-style:normal}
+.nav{display:flex;gap:4px;margin-inline:auto;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.nav::-webkit-scrollbar{display:none}
+.nav button{
+  display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:99px;font-weight:800;font-size:.9rem;
+  color:var(--ink-2);white-space:nowrap;transition:all .2s;
+}
+.nav button:hover{background:var(--red-wash);color:var(--red)}
+.nav button.on{background:linear-gradient(135deg,var(--red-soft),var(--red));color:#fff;box-shadow:0 6px 16px rgba(155,34,48,.22)}
+.nav button .lk{font-size:.8rem;opacity:.85}
+.top-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.class-btn{
+  display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;background:var(--yel-tint);
+  color:var(--yel-ink);font-weight:800;font-size:.85rem;border:1.5px solid var(--yel-soft);transition:all .2s;
+}
+.class-btn:hover{background:var(--yel-soft)}
+.avatar-btn{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--red-soft),var(--red));color:#fff;font-weight:900;display:grid;place-items:center;box-shadow:var(--sh-1)}
+.menu{
+  position:absolute;top:calc(var(--nav-h) - 6px);inset-inline-end:16px;width:250px;background:#fff;border-radius:20px;
+  box-shadow:var(--sh-3);border:1.5px solid var(--line);padding:9px;z-index:60;
+  animation:sheetIn .22s cubic-bezier(.22,1.3,.36,1) both;
+}
+.menu .who{padding:12px 14px;border-bottom:1.5px solid var(--line);margin-bottom:7px}
+.menu .who b{display:block;color:var(--ink)}
+.menu .who span{font-size:.8rem;color:var(--muted)}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border-radius:13px;font-weight:700;font-size:.92rem;color:var(--ink-2);text-align:start;transition:all .18s}
+.menu button:hover{background:var(--red-wash);color:var(--red)}
+.main{flex:1;max-width:1180px;width:100%;margin:0 auto;padding:26px 20px 70px}
+
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.page-head h2{font-size:clamp(1.5rem,4vw,2rem);color:var(--red-ink)}
+.page-head p{color:var(--muted);font-size:.93rem;margin-top:3px}
+
+/* stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:20px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.stat:hover{transform:translateY(-4px);box-shadow:var(--sh-2)}
+.stat .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:1.2rem;margin-bottom:12px}
+.stat .v{font-size:2rem;font-weight:900;color:var(--red-ink);line-height:1}
+.stat .l{font-size:.84rem;color:var(--muted);font-weight:700;margin-top:4px}
+.stat.y .ic{background:var(--yel-tint)} .stat.r .ic{background:var(--red-tint)}
+.stat.g .ic{background:var(--good-tint)} .stat.b .ic{background:#eaf0f7}
+
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:22px;margin-bottom:18px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.panel-head h3{font-size:1.1rem;color:var(--red-ink)}
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.two-col{grid-template-columns:1fr}}
+
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.bar-row .nm{width:92px;font-size:.86rem;font-weight:800;color:var(--ink-2);flex:0 0 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{flex:1;height:11px;border-radius:99px;background:var(--red-wash);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--yel-soft),var(--red-soft));transition:width .9s cubic-bezier(.2,.9,.3,1)}
+.bar-row .v{font-size:.84rem;font-weight:900;color:var(--red);width:42px;text-align:end;flex:0 0 auto}
+
+.list-item{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1.5px solid var(--line)}
+.list-item:last-child{border-bottom:none}
+.list-item .ic{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:1.1rem;background:var(--red-tint);flex:0 0 auto}
+.list-item .t{flex:1;min-width:0}
+.list-item .t b{display:block;font-size:.94rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-item .t span{font-size:.8rem;color:var(--muted)}
+
+/* FAB */
+.fab{
+  position:fixed;bottom:26px;inset-inline-end:26px;z-index:45;width:62px;height:62px;border-radius:50%;
+  background:linear-gradient(135deg,var(--red-soft),var(--red));color:#fff;font-size:1.9rem;font-weight:300;
+  display:grid;place-items:center;box-shadow:0 14px 32px rgba(155,34,48,.34);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.fab:hover{transform:scale(1.1) rotate(90deg)}
+.fab:active{transform:scale(.92)}
+
+/* exercise cards */
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.ex-card{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:20px;
+  display:flex;flex-direction:column;gap:12px;transition:transform .25s,box-shadow .25s,border-color .25s;position:relative;
+}
+.ex-card:hover{transform:translateY(-5px);box-shadow:var(--sh-2);border-color:var(--red-pale)}
+.ex-card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ex-card h4{font-size:1.06rem;color:var(--ink);line-height:1.3}
+.ex-card .meta{display:flex;gap:6px;flex-wrap:wrap}
+.ex-card .acts{display:flex;gap:7px;margin-top:auto;padding-top:4px}
+.ex-card .acts .btn{flex:1}
+.icon-btn{width:34px;height:34px;border-radius:11px;background:var(--red-wash);color:var(--ink-2);display:grid;place-items:center;font-size:.92rem;transition:all .2s;flex:0 0 auto}
+.icon-btn:hover{background:var(--red-tint);color:var(--red)}
+.icon-btn.danger:hover{background:var(--bad-tint);color:var(--bad)}
+
+/* question builder */
+.qb-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:9px;margin-bottom:18px}
+.qb-type{
+  padding:14px 10px;border-radius:16px;border:1.5px solid var(--line);background:#fff;text-align:center;
+  transition:all .22s;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.qb-type:hover{border-color:var(--red-soft);background:var(--red-wash);transform:translateY(-3px)}
+.qb-type .e{font-size:1.5rem}
+.qb-type .n{font-size:.78rem;font-weight:800;color:var(--ink-2);line-height:1.25}
+.q-item{border:1.5px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:var(--red-wash)}
+.q-item .qhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.q-item .qhead .num{width:28px;height:28px;border-radius:9px;background:var(--red);color:#fff;display:grid;place-items:center;font-size:.82rem;font-weight:900;flex:0 0 auto}
+.q-item .qhead .chip{margin-inline-start:auto}
+.opt-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.opt-row .pick{
+  width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:#fff;flex:0 0 auto;
+  display:grid;place-items:center;font-size:.78rem;font-weight:900;color:var(--muted);transition:all .2s;
+}
+.opt-row .pick.on{background:var(--good);border-color:var(--good);color:#fff}
+.tok-pick{display:flex;flex-wrap:wrap;gap:7px;padding:14px;background:#fff;border-radius:14px;border:1.5px solid var(--line)}
+.tok{padding:7px 13px;border-radius:10px;background:var(--red-wash);font-weight:700;font-size:.92rem;transition:all .18s;border:1.5px solid transparent}
+.tok.on{background:var(--good-tint);color:var(--good);border-color:var(--good);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2.5px}
+
+/* ============================================================
+   PLAYER (fullscreen presentation)
+   ============================================================ */
+.player{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#fff,var(--red-wash) 55%,var(--yel-tint));display:none;flex-direction:column}
+.player.show{display:flex;animation:ovIn .3s both}
+.player-top{display:flex;align-items:center;gap:14px;padding:16px 22px}
+.player-top .ttl{font-weight:900;color:var(--red-ink);font-size:1.05rem}
+.player-top .prog{flex:1;height:9px;border-radius:99px;background:#fff;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.05)}
+.player-top .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--yel),var(--red-soft));transition:width .45s cubic-bezier(.2,.9,.3,1)}
+.player-top .sc{font-weight:900;color:var(--red);font-size:1rem;white-space:nowrap}
+.player-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 22px;overflow-y:auto;text-align:center}
+.q-card{width:100%;max-width:880px;animation:qIn .5s cubic-bezier(.2,.9,.3,1) both}
+@keyframes qIn{from{opacity:0;transform:translateY(34px) scale(.97)}to{opacity:1;transform:none}}
+.q-card .qnum{font-size:.82rem;font-weight:900;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+.q-card .prompt{font-size:clamp(1.4rem,4.4vw,2.5rem);font-weight:900;color:var(--ink);margin-bottom:30px;line-height:1.35}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:13px}
+.opt{
+  padding:22px 20px;border-radius:20px;background:#fff;border:2.5px solid var(--line);font-size:clamp(1rem,2.6vw,1.3rem);
+  font-weight:800;color:var(--ink);transition:all .22s cubic-bezier(.34,1.56,.64,1);text-align:center;
+}
+.opt:hover{border-color:var(--red-soft);transform:translateY(-4px);box-shadow:var(--sh-2)}
+.opt.right{background:var(--good-tint);border-color:var(--good);color:var(--good);animation:pop .4s}
+.opt.wrong{background:var(--bad-tint);border-color:var(--bad);color:var(--bad);animation:shake .4s}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.type-in{max-width:520px;margin:0 auto;display:flex;gap:10px}
+.type-in input{flex:1;padding:18px 22px;border-radius:18px;border:2.5px solid var(--line);font-size:1.2rem;font-weight:800;text-align:center;outline:none}
+.type-in input:focus{border-color:var(--red-soft)}
+.sent{font-size:clamp(1.2rem,3.4vw,1.9rem);font-weight:800;line-height:2.1;display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.sent .w{padding:4px 11px;border-radius:11px;background:#fff;border:2px solid transparent;transition:all .2s;cursor:pointer}
+.sent .w.sel{background:var(--yel-tint);border-color:var(--yel);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:3px}
+.sent .w.ok{background:var(--good-tint);border-color:var(--good);color:var(--good);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:3px}
+.sent .w.no{background:var(--bad-tint);border-color:var(--bad);color:var(--bad)}
+.match-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:700px;margin:0 auto}
+.match-col{display:flex;flex-direction:column;gap:10px}
+.mi{padding:15px;border-radius:16px;background:#fff;border:2.5px solid var(--line);font-weight:800;transition:all .22s}
+.mi:hover{border-color:var(--red-soft)}
+.mi.sel{border-color:var(--yel);background:var(--yel-tint)}
+.mi.done{opacity:.4;pointer-events:none;border-color:var(--good);background:var(--good-tint);color:var(--good)}
+.order-list{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.oi{display:flex;align-items:center;gap:12px;padding:15px 18px;border-radius:16px;background:#fff;border:2.5px solid var(--line);font-weight:800;text-align:start}
+.oi .ar{display:flex;flex-direction:column;gap:3px;margin-inline-start:auto}
+.oi .ar button{width:28px;height:22px;border-radius:7px;background:var(--red-wash);color:var(--ink-2);font-size:.7rem;display:grid;place-items:center}
+.oi .ar button:hover{background:var(--red-tint);color:var(--red)}
+.blanks{font-size:clamp(1.1rem,3vw,1.7rem);font-weight:800;line-height:2.4}
+.blanks input{
+  display:inline-block;width:150px;padding:6px 12px;border:none;border-bottom:3px solid var(--red-soft);
+  background:rgba(255,255,255,.7);border-radius:9px 9px 0 0;font-weight:900;text-align:center;font-size:inherit;outline:none;
+}
+.blanks input:focus{background:#fff;border-color:var(--yel)}
+.blanks input.ok{border-color:var(--good);color:var(--good)}
+.blanks input.no{border-color:var(--bad);color:var(--bad)}
+.player-foot{display:flex;align-items:center;justify-content:center;gap:12px;padding:18px 22px 26px;flex-wrap:wrap}
+.fb{font-size:1.2rem;font-weight:900;margin-top:20px;min-height:30px}
+.fb.good{color:var(--good)} .fb.bad{color:var(--bad)}
+
+/* results */
+.res{text-align:center;max-width:520px;margin:0 auto;animation:qIn .5s both}
+.res .big{font-size:4.6rem;line-height:1;margin-bottom:10px}
+.res .pct{font-size:3.4rem;font-weight:900;color:var(--red-ink)}
+.res .sum{color:var(--ink-2);font-weight:700;margin-bottom:24px}
+.res-bars{display:flex;gap:12px;justify-content:center;margin-bottom:26px}
+.res-bars div{flex:1;padding:16px;border-radius:18px;background:#fff;border:1.5px solid var(--line)}
+.res-bars b{display:block;font-size:1.7rem;font-weight:900}
+
+/* confetti */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+.confetti i{position:absolute;width:11px;height:19px;opacity:.95;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(108vh) rotate(760deg);opacity:0}}
+
+/* ============================================================
+   CLASS POINTS
+   ============================================================ */
+.pts-top{display:flex;gap:13px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.total-card{
+  display:flex;align-items:center;gap:16px;padding:18px 26px;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,var(--yel-tint),var(--red-tint));border:1.5px solid var(--yel-soft);
+}
+.total-card .v{font-size:2.4rem;font-weight:900;color:var(--red-ink);line-height:1}
+.total-card .l{font-size:.82rem;font-weight:800;color:var(--yel-ink)}
+.stu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px}
+.stu{
+  background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:16px 12px;text-align:center;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,border-color .25s;position:relative;
+}
+.stu:hover{transform:translateY(-6px);box-shadow:var(--sh-2);border-color:var(--red-pale)}
+.stu.flash{animation:flashPos .6s}
+.stu.flashneg{animation:flashNeg .6s}
+@keyframes flashPos{0%,100%{background:#fff}40%{background:var(--good-tint);transform:scale(1.07)}}
+@keyframes flashNeg{0%,100%{background:#fff}40%{background:var(--bad-tint);transform:scale(.95)}}
+.stu .av{width:68px;height:68px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;font-size:2rem;box-shadow:0 6px 16px rgba(109,27,38,.12)}
+.stu .nm{font-weight:800;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stu .pt{font-size:1.5rem;font-weight:900;color:var(--red);margin-top:3px}
+.stu .pt.neg{color:var(--bad)}
+.stu .quick{display:flex;gap:5px;justify-content:center;margin-top:9px}
+.stu .quick button{flex:1;padding:6px 0;border-radius:9px;font-weight:900;font-size:.8rem;transition:all .18s}
+.stu .quick .p{background:var(--good-tint);color:var(--good)}
+.stu .quick .p:hover{background:var(--good);color:#fff}
+.stu .quick .m{background:var(--bad-tint);color:var(--bad)}
+.stu .quick .m:hover{background:var(--bad);color:#fff}
+.stu .del{position:absolute;top:7px;inset-inline-end:7px;width:24px;height:24px;border-radius:50%;background:var(--red-wash);color:var(--muted);font-size:.7rem;display:none;place-items:center}
+.stu:hover .del{display:grid}
+.stu .del:hover{background:var(--bad);color:#fff}
+.float-pt{
+  position:fixed;z-index:310;font-size:2.2rem;font-weight:900;pointer-events:none;
+  animation:floatUp 1.1s cubic-bezier(.2,.9,.3,1) forwards;
+}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.6)}20%{opacity:1;transform:translateY(-14px) scale(1.25)}100%{opacity:0;transform:translateY(-86px) scale(1)}}
+
+/* student point sheet + skills */
+.stu-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.stu-head .big-av{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:2rem;flex:0 0 auto;background:var(--red-tint)}
+.stu-head h3{font-size:1.35rem;color:var(--red-ink);line-height:1.15}
+.stu-head .tot{font-size:.88rem;font-weight:800;color:var(--muted)}
+.stu-head .tot b{font-size:1.1rem}
+.skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:11px;max-height:52vh;overflow-y:auto;padding:3px}
+.skill-card{
+  position:relative;padding:16px 10px 13px;border-radius:18px;background:#fff;border:2px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:7px;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,border-color .2s;
+}
+.skill-card:hover{transform:translateY(-4px);box-shadow:var(--sh-2);border-color:var(--red-soft)}
+.skill-card:active{transform:scale(.94)}
+.skill-card .e{font-size:1.9rem;line-height:1}
+.skill-card .n{font-weight:800;font-size:.82rem;color:var(--ink);text-align:center;line-height:1.25;word-break:break-word}
+.skill-card .v{position:absolute;top:7px;inset-inline-end:9px;font-weight:900;font-size:.82rem}
+.skill-card .v.p{color:var(--good)} .skill-card .v.m{color:var(--bad)}
+.skill-card .pen{
+  position:absolute;top:5px;inset-inline-start:5px;width:24px;height:24px;border-radius:50%;background:var(--red-wash);
+  color:var(--muted);font-size:.64rem;display:grid;place-items:center;z-index:2;
+  opacity:.5;transition:opacity .18s,background .18s,color .18s;
+}
+.skill-card:hover .pen{opacity:1}
+.skill-card .pen:hover{background:var(--red);color:#fff;opacity:1}
+.skill-card.add{border-style:dashed;border-color:var(--red-pale);background:var(--red-wash);color:var(--red);justify-content:center}
+.skill-card.add .e{font-size:1.5rem;font-weight:300}
+.skill-card.add .n{color:var(--red)}
+.emoji-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;max-height:168px;overflow-y:auto;padding:3px}
+.emoji-grid button{aspect-ratio:1;border-radius:13px;font-size:1.4rem;display:grid;place-items:center;border:2px solid var(--line);background:#fff;transition:all .18s}
+.emoji-grid button:hover{transform:scale(1.12)}
+.emoji-grid button.on{border-color:var(--red);background:var(--red-tint);transform:scale(1.08)}
+.pt-seg{display:flex;gap:5px;flex-wrap:wrap}
+.pt-seg button{
+  min-width:46px;padding:9px 12px;border-radius:12px;border:2px solid var(--line);background:#fff;
+  font-weight:900;font-size:.9rem;color:var(--ink-2);transition:all .18s;
+}
+.pt-seg button:hover{border-color:var(--red-soft)}
+.pt-seg button.on{background:var(--red);border-color:var(--red);color:#fff}
+.pt-seg button.on.neg{background:var(--bad);border-color:var(--bad)}
+.stu{cursor:pointer}
+.av-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:9px;max-height:210px;overflow-y:auto;padding:4px}
+.av-pick button{aspect-ratio:1;border-radius:16px;font-size:1.6rem;display:grid;place-items:center;border:2px solid var(--line);background:#fff;transition:all .2s}
+.av-pick button:hover{transform:scale(1.12)}
+.av-pick button.on{border-color:var(--red);background:var(--red-tint);transform:scale(1.07)}
+
+/* picker */
+.picker-stage{text-align:center;padding:26px 0}
+.picker-name{
+  font-size:clamp(2rem,8vw,4rem);font-weight:900;color:var(--red-ink);min-height:1.2em;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+}
+.picker-name .ava{font-size:1.1em}
+.spinning .picker-name{animation:blurSpin .14s linear infinite}
+@keyframes blurSpin{0%{opacity:.35;transform:translateY(-9px) scale(.95)}50%{opacity:1;transform:none}100%{opacity:.35;transform:translateY(9px) scale(.95)}}
+.winner{animation:winPop .75s cubic-bezier(.22,1.5,.36,1)}
+@keyframes winPop{0%{transform:scale(.4);opacity:0}55%{transform:scale(1.22)}100%{transform:scale(1);opacity:1}}
+
+/* log */
+.log-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--line);font-size:.89rem}
+.log-row:last-child{border:none}
+.log-row .d{font-weight:900;width:42px;flex:0 0 auto;text-align:center;border-radius:8px;padding:3px 0;font-size:.82rem}
+.log-row .d.p{background:var(--good-tint);color:var(--good)}
+.log-row .d.m{background:var(--bad-tint);color:var(--bad)}
+.log-row .tm{margin-inline-start:auto;color:var(--muted);font-size:.78rem;flex:0 0 auto}
+
+/* ============================================================
+   GAMES
+   ============================================================ */
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.g-card{position:relative;border-radius:var(--r-lg);padding:22px;border:1.5px solid var(--line);background:var(--card);transition:transform .25s,box-shadow .25s}
+.g-card:hover{transform:translateY(-5px);box-shadow:var(--sh-2)}
+.g-card .hero-ic{font-size:2.3rem;margin-bottom:10px}
+.g-card h4{font-size:1.07rem;color:var(--ink);margin-bottom:5px}
+.g-card .acts{display:flex;gap:7px;margin-top:14px}
+.mode-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px}
+.mode{padding:18px 14px;border-radius:18px;border:2px solid var(--line);background:#fff;text-align:center;transition:all .22s}
+.mode:hover{border-color:var(--red-soft);transform:translateY(-4px);background:var(--red-wash)}
+.mode.on{border-color:var(--red);background:var(--red-tint)}
+.mode .e{font-size:1.9rem;display:block;margin-bottom:7px}
+.mode .n{font-weight:900;font-size:.92rem;color:var(--ink)}
+.mode .d{font-size:.76rem;color:var(--muted);margin-top:3px}
+
+/* bamboozle board */
+.board{display:grid;gap:11px;max-width:900px;margin:0 auto;width:100%}
+.player-body>div{margin:0 auto}
+.tile{
+  aspect-ratio:1.25;border-radius:20px;display:grid;place-items:center;font-size:clamp(1.3rem,4vw,2.2rem);font-weight:900;
+  color:#fff;background:linear-gradient(145deg,var(--red-soft),var(--red));box-shadow:0 8px 20px rgba(155,34,48,.2);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+}
+.tile:nth-child(3n){background:linear-gradient(145deg,var(--yel-soft),var(--yel));color:#6b4f12}
+.tile:nth-child(4n){background:linear-gradient(145deg,#c2505c,var(--red))}
+.tile:hover{transform:scale(1.07) rotate(-2deg)}
+.tile.used{opacity:.25;pointer-events:none;transform:scale(.9)}
+.teams{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.team{
+  padding:13px 22px;border-radius:18px;background:#fff;border:2.5px solid var(--line);text-align:center;min-width:120px;transition:all .25s;
+}
+.team.on{border-color:var(--red);box-shadow:0 8px 22px rgba(155,34,48,.18);transform:translateY(-4px)}
+.team .n{font-weight:900;font-size:.9rem;color:var(--ink-2)}
+.team .s{font-size:1.9rem;font-weight:900;color:var(--red-ink);line-height:1.1}
+.team.on .n{color:var(--red)}
+.prize{font-size:clamp(1.6rem,5vw,2.6rem);font-weight:900;color:var(--yel-ink);animation:pop .5s}
+
+/* wheel */
+.wheel-wrap{position:relative;width:min(360px,80vw);aspect-ratio:1;margin:0 auto 22px}
+.wheel{width:100%;height:100%;border-radius:50%;border:10px solid #fff;box-shadow:var(--sh-3);transition:transform 4.2s cubic-bezier(.17,.67,.17,1)}
+.wheel-pin{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:2.2rem;z-index:2;filter:drop-shadow(0 3px 5px rgba(0,0,0,.2))}
+
+/* memory/match grid */
+.mem-grid{display:grid;gap:10px;max-width:760px;margin:0 auto;width:100%}
+.mem{
+  aspect-ratio:1.3;border-radius:16px;display:grid;place-items:center;padding:9px;font-weight:800;
+  font-size:clamp(.78rem,2.1vw,1.02rem);text-align:center;background:#fff;border:2.5px solid var(--line);transition:all .25s;
+  overflow:hidden;word-break:break-word;
+}
+.mem:hover{border-color:var(--red-soft);transform:translateY(-3px)}
+.mem.sel{border-color:var(--yel);background:var(--yel-tint)}
+.mem.gone{opacity:0;pointer-events:none;transform:scale(.7)}
+.mem.bad{animation:shake .4s;border-color:var(--bad);background:var(--bad-tint)}
+
+/* ============================================================
+   GRADES
+   ============================================================ */
+.lock-wrap{max-width:400px;margin:70px auto;text-align:center}
+.lock-wrap .ic{font-size:3.4rem;margin-bottom:14px;animation:wiggle 2.6s ease-in-out infinite}
+@keyframes wiggle{0%,92%,100%{transform:rotate(0)}94%{transform:rotate(-9deg)}96%{transform:rotate(9deg)}98%{transform:rotate(-5deg)}}
+.table-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1.5px solid var(--line);background:#fff}
+table{border-collapse:collapse;width:100%;min-width:660px}
+th,td{padding:13px 14px;text-align:start;border-bottom:1.5px solid var(--line);font-size:.9rem;white-space:nowrap}
+th{background:var(--red-wash);font-weight:900;color:var(--red-ink);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0}
+tbody tr:hover{background:var(--red-wash)}
+tbody tr:last-child td{border-bottom:none}
+td .g-in{width:62px;padding:7px 9px;border-radius:10px;border:1.5px solid var(--line);text-align:center;font-weight:800;outline:none;background:#fff}
+td .g-in:focus{border-color:var(--red-soft);box-shadow:0 0 0 3px var(--red-tint)}
+.grade-pill{padding:4px 12px;border-radius:99px;font-weight:900;font-size:.82rem}
+.gA{background:var(--good-tint);color:var(--good)} .gB{background:#eaf3ea;color:#5f8c5f}
+.gC{background:var(--yel-tint);color:var(--yel-ink)} .gD{background:#fdeee2;color:#c47b3e} .gF{background:var(--bad-tint);color:var(--bad)}
+.stu-cell{display:flex;align-items:center;gap:10px}
+.stu-cell .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;flex:0 0 auto}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:22px;inset-inline-start:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
+.toast{
+  padding:13px 24px;border-radius:99px;background:var(--ink);color:#fff;font-weight:800;font-size:.92rem;
+  box-shadow:var(--sh-3);animation:toastIn .35s cubic-bezier(.22,1.4,.36,1) both;
+}
+.toast.good{background:var(--good)} .toast.bad{background:var(--bad)}
+@keyframes toastIn{from{opacity:0;transform:translateY(22px) scale(.9)}to{opacity:1;transform:none}}
+
+@media(max-width:720px){
+  :root{--nav-h:auto}
+  .main{padding:18px 14px 90px}
+  /* nav drops onto its own full-width row so all five tabs are reachable */
+  .topbar{padding:8px 12px;gap:9px;flex-wrap:wrap;height:auto}
+  .brand b{display:none}
+  .nav{order:3;width:100%;margin:0;padding-bottom:2px;gap:5px}
+  .nav button{padding:8px 13px;font-size:.84rem}
+  .nav button .lk{display:inline}
+  .top-right{margin-inline-start:auto}
+  .class-btn span.cn{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .menu{top:auto;margin-top:4px}
+  /* one tidy row of actions instead of a stack */
+  .pts-top{gap:8px}
+  .total-card{width:100%;padding:14px 20px}
+  .total-card .v{font-size:2rem}
+  .pts-top .btn{flex:1 1 calc(50% - 5px);min-width:0;padding:12px 10px;font-size:.84rem}
+  .page-head{gap:10px}
+  .page-head .btn{width:100%}
+  /* the header already carries the primary action, so the FAB would just
+     sit on top of the last row's buttons */
+  .fab{display:none}
+  /* let the whole sheet scroll on a phone instead of a clipped inner grid */
+  .skill-grid{max-height:none;overflow:visible;grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+  .emoji-grid{max-height:140px}
+  .stu-head .big-av{width:54px;height:54px;font-size:1.7rem}
+  .sheet{padding:22px;border-radius:26px}
+  .match-cols{grid-template-columns:1fr}
+  .stat .v{font-size:1.7rem}
+  .fab{bottom:18px;inset-inline-end:18px;width:56px;height:56px}
+}
+</style>
+</head>
+<body class="lang-en">
+
+<!-- ============ LANDING ============ -->
+<div id="landing">
+  <div class="land-top" id="landTop">
+    <div class="mini">
+      <span id="miniLogo"></span>
+      <b dir="ltr">Rona Classroom<span style="color:var(--yel)">+</span></b>
+    </div>
+    <div style="margin-inline-start:auto;display:flex;gap:10px;align-items:center">
+      <div class="lang-pill" id="landLang"></div>
+      <button class="btn btn-primary btn-sm" onclick="openAuth('in')" data-i18n="signIn">Sign in</button>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+    <div class="logo-wrap" id="heroLogo"></div>
+    <h1 dir="ltr">Rona Classroom<span class="plus">+</span></h1>
+    <p class="tag" data-i18n="heroTag">The teacher's toolkit for building exercises, running class games, tracking points and keeping grades — all in one comfortable place.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary btn-lg" onclick="openAuth('up')" data-i18n="getStarted">Get started</button>
+      <button class="btn btn-ghost btn-lg" onclick="document.getElementById('learn').scrollIntoView()" data-i18n="learnMore">Learn more</button>
+    </div>
+    <div class="scroll-cue"><div class="mouse"></div><span data-i18n="scroll">Scroll</span></div>
+  </section>
+
+  <section class="sect" id="learn">
+    <div class="sect-head reveal">
+      <h2 data-i18n="whatTitle">Everything you teach, in one classroom</h2>
+      <p data-i18n="whatSub">Rona Classroom+ extends what you can do in a lesson. Build your own exercises, turn them into games, reward your students live, and keep every grade in order.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal"><div class="ic">📝</div><h3 data-i18n="f1t">Build any exercise</h3><p data-i18n="f1d">Multiple choice, true/false, typing, underlining words, matching pairs, filling blanks or putting things in order. Seven formats, your content.</p></div>
+      <div class="feat reveal"><div class="ic">⭐</div><h3 data-i18n="f2t">Live class points</h3><p data-i18n="f2d">Add your students with their own avatars, give or take points instantly, and let the random picker choose who answers next.</p></div>
+      <div class="feat reveal"><div class="ic">🎮</div><h3 data-i18n="f3t">Turn it into a game</h3><p data-i18n="f3d">Team boards, spin the wheel, match-up races and quiz sprints. The same questions, a classroom that suddenly wakes up.</p></div>
+      <div class="feat reveal"><div class="ic">📊</div><h3 data-i18n="f4t">Grades that stay private</h3><p data-i18n="f4d">Participation, behaviour and tests in one table, locked behind your own password so nobody peeks at the board.</p></div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head reveal">
+      <h2 data-i18n="howTitle">Up and running in a minute</h2>
+      <p data-i18n="howSub">No setup, no installing. Make your teacher account, pick your class, and start.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="n">1</div><h4 data-i18n="s1t">Create your account</h4><p data-i18n="s1d">Email, password, your subject and the teacher code from your school.</p></div>
+      <div class="step reveal"><div class="n">2</div><h4 data-i18n="s2t">Pick your class</h4><p data-i18n="s2d">Every class keeps its own students, exercises, points and grades.</p></div>
+      <div class="step reveal"><div class="n">3</div><h4 data-i18n="s3t">Build your first exercise</h4><p data-i18n="s3d">Write the questions once, play it on the board as many times as you like.</p></div>
+      <div class="step reveal"><div class="n">4</div><h4 data-i18n="s4t">Teach</h4><p data-i18n="s4d">Points fly, students compete, and the grade book fills itself in.</p></div>
+    </div>
+  </section>
+
+  <div class="cta-band reveal">
+    <h2 data-i18n="ctaTitle">Ready for your class?</h2>
+    <p data-i18n="ctaSub">Teacher accounts only — you'll need the code from your school.</p>
+    <button class="btn btn-primary btn-lg" onclick="openAuth('up')" data-i18n="createAccount">Create teacher account</button>
+  </div>
+  <div class="land-foot">Rona Schools 2010</div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span id="navLogo"></span><b dir="ltr">Classroom<i>+</i></b></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="top-right">
+      <button class="class-btn" onclick="openClassPicker()"><span>🏫</span><span class="cn" id="classBtnName">—</span><span style="font-size:.7rem">▾</span></button>
+      <button class="avatar-btn" id="avBtn" onclick="toggleMenu(event)">T</button>
+    </div>
+  </header>
+  <main class="main" id="view"></main>
+  <button class="fab hidden" id="fab">+</button>
+</div>
+
+<!-- overlays -->
+<div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
+<div class="player" id="player"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ============================================================
+   CORE : logo · storage · i18n · sound · auth · routing
+   ============================================================ */
+
+/* ---------- Rona crest (vector rebuild of the school logo) ---------- */
+function ronaLogo(){return `<img src="data:image/png;base64,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" alt="Rona Schools" style="width:100%;height:100%;object-fit:contain;display:block">`}
+
+/* ---------- storage ---------- */
+const KEY='rona_classroom_plus_v1';
+let DB={teachers:[],classes:[],session:null,lang:'en'};
+function load(){try{const r=localStorage.getItem(KEY);if(r)DB=Object.assign(DB,JSON.parse(r))}catch(e){console.warn('load failed',e)}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){toast('Storage full',"bad")}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function teacher(){return DB.teachers.find(t=>t.id===(DB.session&&DB.session.teacherId))||null}
+function klass(){return DB.classes.find(c=>c.id===(DB.session&&DB.session.classId))||null}
+function myClasses(){const t=teacher();return t?DB.classes.filter(c=>c.teacherId===t.id):[]}
+
+/* ---------- i18n ---------- */
+const I18N={
+en:{
+ signIn:"Sign in",signUp:"Sign up",getStarted:"Get started",learnMore:"Learn more",scroll:"Scroll",
+ heroTag:"The teacher's toolkit for building exercises, running class games, tracking points and keeping grades — all in one comfortable place.",
+ whatTitle:"Everything you teach, in one classroom",
+ whatSub:"Rona Classroom+ extends what you can do in a lesson. Build your own exercises, turn them into games, reward your students live, and keep every grade in order.",
+ f1t:"Build any exercise",f1d:"Multiple choice, true/false, typing, underlining words, matching pairs, filling blanks or putting things in order. Seven formats, your content.",
+ f2t:"Live class points",f2d:"Add your students with their own avatars, give or take points instantly, and let the random picker choose who answers next.",
+ f3t:"Turn it into a game",f3d:"Team boards, spin the wheel, match-up races and quiz sprints. The same questions, a classroom that suddenly wakes up.",
+ f4t:"Grades that stay private",f4d:"Participation, behaviour and tests in one table, locked behind your own password so nobody peeks at the board.",
+ howTitle:"Up and running in a minute",howSub:"No setup, no installing. Make your teacher account, pick your class, and start.",
+ s1t:"Create your account",s1d:"Email, password, your subject and the teacher code from your school.",
+ s2t:"Pick your class",s2d:"Every class keeps its own students, exercises, points and grades.",
+ s3t:"Build your first exercise",s3d:"Write the questions once, play it on the board as many times as you like.",
+ s4t:"Teach",s4d:"Points fly, students compete, and the grade book fills itself in.",
+ ctaTitle:"Ready for your class?",ctaSub:"Teacher accounts only — you'll need the code from your school.",
+ createAccount:"Create teacher account",protoNote:"Prototype — everything is saved on this device only",
+ /* nav */
+ navHome:"Home",navEx:"Exercises",navPts:"Class Points",navGames:"Exercise Games",navGrades:"Grades",
+ /* auth */
+ fullName:"Full name",email:"Email",password:"Password",confirmPw:"Confirm password",subject:"Subject you teach",
+ teacherCode:"Teacher code",teacherCodeHint:"Ask your school administration for this code.",
+ welcomeBack:"Welcome back",welcomeSub:"Sign in to your classroom.",joinTitle:"Create your teacher account",joinSub:"Only teachers with the school code can join.",
+ errFill:"Please fill in every field.",errPwMatch:"The two passwords don't match.",errPwShort:"Password must be at least 6 characters.",
+ errCode:"That teacher code isn't right.",errEmailUsed:"An account with that email already exists.",errNoUser:"No account found with that email.",
+ errWrongPw:"Wrong password.",errEmail:"Please enter a valid email.",
+ signOut:"Sign out",
+ /* classes */
+ yourClasses:"Your classes",pickClassSub:"Pick a class to teach, or make a new one.",createClass:"Create a class",className:"Class name",gradeLevel:"Grade / level",
+ classHint:"e.g. Grade 7B, Form 3, Beginners",newClass:"New class",enterClass:"Enter class",noClasses:"No classes yet.",classCreated:"Class created",
+ switchClass:"Switch class",students:"students",
+ /* home */
+ homeSub:"Here's how your class is doing.",totalPoints:"Class points",exDone:"Exercises played",thisWeek:"Played this week",
+ mistakes:"Mistakes this week",studentsN:"Students",avgScore:"Average score",exMade:"Exercises built",gamesMade:"Games built",
+ topStudents:"Top students",recentActivity:"Recent activity",noActivity:"Nothing yet — play an exercise and it shows up here.",
+ quickActions:"Quick actions",qaEx:"Build an exercise",qaPts:"Give points",qaGame:"Start a game",qaGrades:"Open grades",noStudentsYet:"Add your students in Class Points.",
+ /* exercises */
+ exSub:"Build it once, play it in every lesson.",newExercise:"New exercise",exName:"Exercise name",unit:"Unit / topic",
+ questions:"Questions",addQuestion:"Add a question",chooseType:"Pick a question type",save:"Save",cancel:"Cancel",edit:"Edit",del:"Delete",play:"Play",
+ noExercises:"No exercises yet",noExercisesSub:"Tap the + button to build your first one.",
+ mcq:"Multiple choice",truefalse:"True / False",typeAns:"Type the answer",underline:"Underline words",matchP:"Match pairs",blanksT:"Fill the blanks",orderT:"Put in order",
+ questionText:"Question",optionN:"Option",correctAns:"Correct answer",addOption:"Add option",acceptedAns:"Accepted answers (comma separated)",
+ pairs:"Pairs",leftSide:"Left",rightSide:"Right",addPair:"Add pair",items:"Items in the correct order",addItem:"Add item",
+ tokensHelp:"Write the sentence, then tap the words that should be underlined.",buildTokens:"Load words",
+ blanksHelp:"Write the sentence and use *** where the blank goes. Example: The cat *** on the mat.",
+ needTitle:"Give the exercise a name first.",needQuestions:"Add at least one question.",saved:"Saved",deleted:"Deleted",
+ confirmDel:"Delete this? It can't be undone.",trueT:"True",falseT:"False",qsCount:"questions",never:"Never played",lastPlayed:"Last played",
+ /* player */
+ question:"Question",ofT:"of",score:"Score",nextQ:"Next",finish:"Finish",checkAns:"Check",correctT:"Correct!",wrongT:"Not quite",
+ results:"Results",playAgain:"Play again",exitT:"Exit",greatJob:"Brilliant work!",goodJob:"Nicely done!",keepGoing:"Keep practising!",
+ rightAnswers:"Right",wrongAnswers:"Wrong",answerWas:"Answer:",tapWords:"Tap the words to underline them.",
+ /* points */
+ ptsSub:"Reward the room, live.",addStudent:"Add student",studentName:"Student name",pickAvatar:"Pick an avatar",
+ classTotal:"Class total",randomPicker:"Random picker",pickStudent:"Pick a student",picking:"Picking…",spinAgain:"Pick again",
+ noStudents:"No students yet",noStudentsSub:"Add your class list and give out your first points.",
+ awardAll:"Give everyone +1",resetPts:"Reset points",resetConfirm:"Reset every student's points to zero?",history:"Points history",noHistory:"No points given yet.",
+ added:"Added",pointsW:"points",
+ /* games */
+ gamesSub:"Same questions, far more noise.",newGame:"New game",gameName:"Game name",gameMode:"Game mode",
+ teamBoard:"Team board",teamBoardD:"Pick a tile, answer, win mystery points",spinWheel:"Spin the wheel",spinWheelD:"The wheel decides the question",
+ matchUp:"Match up",matchUpD:"Race to pair everything correctly",quizRace:"Quiz race",quizRaceD:"Beat the clock, question by question",
+ questionSource:"Where do the questions come from?",fromExercise:"From an exercise",writeOwn:"Write them here",pickExercise:"Pick an exercise",
+ qAnswer:"Answer",addQA:"Add question",teamsT:"Teams",teamCount:"How many teams?",startGame:"Start game",
+ noGames:"No games yet",noGamesSub:"Build a game and watch the class wake up.",needQA:"Add at least two questions.",needExercise:"Pick an exercise first.",
+ turnOf:"Turn:",teamN:"Team",gameOver:"Game over!",winnerIs:"Winner:",tie:"It's a tie!",spinT:"Spin",timeLeft:"Time",allMatched:"All matched!",
+ pickTile:"Pick a tile",mysteryPts:"Mystery points:",noExForGame:"You need an exercise with questions first.",
+ /* grades */
+ gradesSub:"Participation, behaviour and tests.",locked:"Grades are locked",lockedSub:"Enter your account password to open the grade book.",
+ unlock:"Unlock",wrongPw:"Wrong password.",student:"Student",participation:"Participation",behavior:"Behaviour",testsT:"Tests",
+ addTest:"Add test",testName:"Test name",maxScore:"Out of",avgT:"Average",gradeT:"Grade",totalT:"Total",gradesSaved:"Grades saved",
+ noStudentsGrades:"Add students in Class Points first.",outOf10:"out of 10",lockAgain:"Lock",removeTest:"Remove test",
+ /* common */
+ manageHint:"Tap a skill to edit it, or add a new one.",
+ givePoint:"Give a point",positiveT:"Positive",needsWork:"Needs work",manageSkills:"Manage skills",
+ newSkill:"New skill",editSkill:"Edit skill",skillName:"Name",skillPts:"Points",skillIcon:"Icon",
+ addSkillT:"Add skill",delSkill:"Delete skill",skillSaved:"Skill saved",needSkillName:"Give the skill a name.",
+ noSkillsYet:"No skills here yet — add one.",totalPts:"total",tapSkill:"Tap a skill to award it.",
+ skParticipate:"Participating",skGoodAnswer:"Good answer",skHelping:"Helping others",skHomework:"Homework done",
+ skOnTask:"On task",skEffort:"Great effort",skTeamwork:"Teamwork",skImproved:"Improved",
+ skOffTask:"Off task",skTalking:"Talking out of turn",skNoHw:"No homework",skLate:"Late",skDisrespect:"Disrespect",
+ close:"Close",back:"Back",done:"Done",yes:"Yes",no:"No",create:"Create",search:"Search",
+},
+ar:{
+ signIn:"تسجيل الدخول",signUp:"إنشاء حساب",getStarted:"ابدأ الآن",learnMore:"اعرف المزيد",scroll:"انزل",
+ heroTag:"أدوات المعلّم لبناء التمارين وتشغيل ألعاب الصف ومتابعة النقاط وحفظ الدرجات — كلّها في مكان واحد مريح.",
+ whatTitle:"كل ما تُدرّسه في صفّ واحد",
+ whatSub:"رونا كلاسروم+ يوسّع ما يمكنك فعله في الحصة. ابنِ تمارينك، حوّلها إلى ألعاب، كافئ طلابك مباشرة، واحفظ كل الدرجات مرتّبة.",
+ f1t:"ابنِ أي تمرين",f1d:"اختيار من متعدد، صح/خطأ، كتابة الجواب، تسطير الكلمات، مطابقة الأزواج، ملء الفراغات أو الترتيب. سبع صيغ ومحتواك أنت.",
+ f2t:"نقاط الصف المباشرة",f2d:"أضف طلابك بصورهم الرمزية، امنح أو اسحب النقاط فوراً، ودع القرعة تختار من يجيب.",
+ f3t:"حوّلها إلى لعبة",f3d:"لوحة الفرق، عجلة الحظ، سباق المطابقة وسباق الأسئلة. نفس الأسئلة وصفّ يستيقظ فجأة.",
+ f4t:"درجات محميّة",f4d:"المشاركة والسلوك والاختبارات في جدول واحد، مقفلة بكلمة مرورك حتى لا يراها أحد.",
+ howTitle:"جاهز خلال دقيقة",howSub:"بدون تنصيب ولا إعدادات. أنشئ حساب المعلّم، اختر صفّك، وابدأ.",
+ s1t:"أنشئ حسابك",s1d:"البريد وكلمة المرور ومادتك ورمز المعلّم من مدرستك.",
+ s2t:"اختر صفّك",s2d:"كل صفّ يحتفظ بطلابه وتمارينه ونقاطه ودرجاته.",
+ s3t:"ابنِ أول تمرين",s3d:"اكتب الأسئلة مرة واحدة وشغّلها على السبورة كما تشاء.",
+ s4t:"درّس",s4d:"النقاط تتطاير، الطلاب يتنافسون، ودفتر الدرجات يملأ نفسه.",
+ ctaTitle:"جاهز لصفّك؟",ctaSub:"للمعلّمين فقط — تحتاج رمز مدرستك.",
+ createAccount:"إنشاء حساب معلّم",protoNote:"نموذج أولي — كل شيء محفوظ على هذا الجهاز فقط",
+ navHome:"الرئيسية",navEx:"التمارين",navPts:"نقاط الصف",navGames:"ألعاب التمارين",navGrades:"الدرجات",
+ fullName:"الاسم الكامل",email:"البريد الإلكتروني",password:"كلمة المرور",confirmPw:"تأكيد كلمة المرور",subject:"المادة التي تدرّسها",
+ teacherCode:"رمز المعلّم",teacherCodeHint:"اطلب هذا الرمز من إدارة مدرستك.",
+ welcomeBack:"أهلاً بعودتك",welcomeSub:"سجّل الدخول إلى صفّك.",joinTitle:"أنشئ حساب المعلّم",joinSub:"المعلّمون الذين يملكون رمز المدرسة فقط.",
+ errFill:"يرجى تعبئة جميع الحقول.",errPwMatch:"كلمتا المرور غير متطابقتين.",errPwShort:"كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+ errCode:"رمز المعلّم غير صحيح.",errEmailUsed:"يوجد حساب بهذا البريد مسبقاً.",errNoUser:"لا يوجد حساب بهذا البريد.",
+ errWrongPw:"كلمة المرور خاطئة.",errEmail:"يرجى إدخال بريد صحيح.",
+ signOut:"تسجيل الخروج",
+ yourClasses:"صفوفك",pickClassSub:"اختر صفاً لتدريسه أو أنشئ صفاً جديداً.",createClass:"إنشاء صف",className:"اسم الصف",gradeLevel:"الصف / المستوى",
+ classHint:"مثال: السابع ب، المستوى ٣، المبتدئون",newClass:"صف جديد",enterClass:"ادخل الصف",noClasses:"لا توجد صفوف بعد.",classCreated:"تم إنشاء الصف",
+ switchClass:"تغيير الصف",students:"طالب",
+ homeSub:"هذه حالة صفّك.",totalPoints:"نقاط الصف",exDone:"التمارين المُشغّلة",thisWeek:"هذا الأسبوع",
+ mistakes:"الأخطاء هذا الأسبوع",studentsN:"الطلاب",avgScore:"متوسط النتيجة",exMade:"تمارين مبنية",gamesMade:"ألعاب مبنية",
+ topStudents:"المتصدرون",recentActivity:"آخر النشاطات",noActivity:"لا شيء بعد — شغّل تمريناً وسيظهر هنا.",
+ quickActions:"إجراءات سريعة",qaEx:"ابنِ تمريناً",qaPts:"امنح نقاطاً",qaGame:"ابدأ لعبة",qaGrades:"افتح الدرجات",noStudentsYet:"أضف طلابك من نقاط الصف.",
+ exSub:"ابنه مرة وشغّله في كل حصة.",newExercise:"تمرين جديد",exName:"اسم التمرين",unit:"الوحدة / الموضوع",
+ questions:"الأسئلة",addQuestion:"إضافة سؤال",chooseType:"اختر نوع السؤال",save:"حفظ",cancel:"إلغاء",edit:"تعديل",del:"حذف",play:"تشغيل",
+ noExercises:"لا توجد تمارين",noExercisesSub:"اضغط زر + لبناء أول تمرين.",
+ mcq:"اختيار من متعدد",truefalse:"صح / خطأ",typeAns:"اكتب الجواب",underline:"سطّر الكلمات",matchP:"طابق الأزواج",blanksT:"املأ الفراغات",orderT:"رتّب",
+ questionText:"السؤال",optionN:"خيار",correctAns:"الجواب الصحيح",addOption:"إضافة خيار",acceptedAns:"الأجوبة المقبولة (افصل بفاصلة)",
+ pairs:"الأزواج",leftSide:"يمين",rightSide:"يسار",addPair:"إضافة زوج",items:"العناصر بالترتيب الصحيح",addItem:"إضافة عنصر",
+ tokensHelp:"اكتب الجملة ثم اضغط الكلمات التي يجب تسطيرها.",buildTokens:"تحميل الكلمات",
+ blanksHelp:"اكتب الجملة وضع *** مكان الفراغ. مثال: القطة *** على السجادة.",
+ needTitle:"أعطِ التمرين اسماً أولاً.",needQuestions:"أضف سؤالاً واحداً على الأقل.",saved:"تم الحفظ",deleted:"تم الحذف",
+ confirmDel:"هل تحذف هذا؟ لا يمكن التراجع.",trueT:"صح",falseT:"خطأ",qsCount:"سؤال",never:"لم يُشغّل",lastPlayed:"آخر تشغيل",
+ question:"سؤال",ofT:"من",score:"النتيجة",nextQ:"التالي",finish:"إنهاء",checkAns:"تحقق",correctT:"إجابة صحيحة!",wrongT:"ليس تماماً",
+ results:"النتائج",playAgain:"أعد التشغيل",exitT:"خروج",greatJob:"عمل رائع!",goodJob:"أحسنت!",keepGoing:"واصل التدريب!",
+ rightAnswers:"صحيح",wrongAnswers:"خطأ",answerWas:"الجواب:",tapWords:"اضغط الكلمات لتسطيرها.",
+ ptsSub:"كافئ الصف مباشرة.",addStudent:"إضافة طالب",studentName:"اسم الطالب",pickAvatar:"اختر صورة رمزية",
+ classTotal:"مجموع الصف",randomPicker:"القرعة",pickStudent:"اختر طالباً",picking:"جارٍ الاختيار…",spinAgain:"اختر مجدداً",
+ noStudents:"لا يوجد طلاب",noStudentsSub:"أضف قائمة صفّك وامنح أول نقاط.",
+ awardAll:"امنح الجميع +1",resetPts:"تصفير النقاط",resetConfirm:"تصفير نقاط كل الطلاب؟",history:"سجل النقاط",noHistory:"لم تُمنح نقاط بعد.",
+ added:"أُضيف",pointsW:"نقطة",
+ gamesSub:"نفس الأسئلة، ضجيج أكثر بكثير.",newGame:"لعبة جديدة",gameName:"اسم اللعبة",gameMode:"نوع اللعبة",
+ teamBoard:"لوحة الفرق",teamBoardD:"اختر مربعاً، أجب، واربح نقاطاً غامضة",spinWheel:"عجلة الحظ",spinWheelD:"العجلة تختار السؤال",
+ matchUp:"المطابقة",matchUpD:"سابق الوقت لمطابقة كل الأزواج",quizRace:"سباق الأسئلة",quizRaceD:"اسبق الساعة سؤالاً بسؤال",
+ questionSource:"من أين تأتي الأسئلة؟",fromExercise:"من تمرين",writeOwn:"اكتبها هنا",pickExercise:"اختر تمريناً",
+ qAnswer:"الجواب",addQA:"إضافة سؤال",teamsT:"الفرق",teamCount:"كم فريقاً؟",startGame:"ابدأ اللعبة",
+ noGames:"لا توجد ألعاب",noGamesSub:"ابنِ لعبة وشاهد الصف يستيقظ.",needQA:"أضف سؤالين على الأقل.",needExercise:"اختر تمريناً أولاً.",
+ turnOf:"الدور:",teamN:"فريق",gameOver:"انتهت اللعبة!",winnerIs:"الفائز:",tie:"تعادل!",spinT:"أدر",timeLeft:"الوقت",allMatched:"طابقت الكل!",
+ pickTile:"اختر مربعاً",mysteryPts:"نقاط غامضة:",noExForGame:"تحتاج تمريناً فيه أسئلة أولاً.",
+ gradesSub:"المشاركة والسلوك والاختبارات.",locked:"الدرجات مقفلة",lockedSub:"أدخل كلمة مرور حسابك لفتح دفتر الدرجات.",
+ unlock:"فتح",wrongPw:"كلمة المرور خاطئة.",student:"الطالب",participation:"المشاركة",behavior:"السلوك",testsT:"الاختبارات",
+ addTest:"إضافة اختبار",testName:"اسم الاختبار",maxScore:"من",avgT:"المعدل",gradeT:"التقدير",totalT:"المجموع",gradesSaved:"حُفظت الدرجات",
+ noStudentsGrades:"أضف الطلاب من نقاط الصف أولاً.",outOf10:"من 10",lockAgain:"إقفال",removeTest:"حذف الاختبار",
+ manageHint:"اضغط على مهارة لتعديلها، أو أضف واحدة جديدة.",
+ givePoint:"امنح نقطة",positiveT:"إيجابي",needsWork:"يحتاج تحسين",manageSkills:"إدارة المهارات",
+ newSkill:"مهارة جديدة",editSkill:"تعديل المهارة",skillName:"الاسم",skillPts:"النقاط",skillIcon:"الأيقونة",
+ addSkillT:"إضافة مهارة",delSkill:"حذف المهارة",skillSaved:"حُفظت المهارة",needSkillName:"أعطِ المهارة اسماً.",
+ noSkillsYet:"لا توجد مهارات هنا — أضف واحدة.",totalPts:"المجموع",tapSkill:"اضغط على مهارة لمنحها.",
+ skParticipate:"المشاركة",skGoodAnswer:"إجابة جيدة",skHelping:"مساعدة الآخرين",skHomework:"أنجز الواجب",
+ skOnTask:"ملتزم بالعمل",skEffort:"جهد ممتاز",skTeamwork:"العمل الجماعي",skImproved:"تحسّن",
+ skOffTask:"غير ملتزم",skTalking:"يتكلم بدون إذن",skNoHw:"لم ينجز الواجب",skLate:"تأخر",skDisrespect:"قلة احترام",
+ close:"إغلاق",back:"رجوع",done:"تم",yes:"نعم",no:"لا",create:"إنشاء",search:"بحث",
+},
+ku:{
+ signIn:"چوونەژوورەوە",signUp:"دروستکردنی هەژمار",getStarted:"دەستپێبکە",learnMore:"زیاتر بزانە",scroll:"بۆ خوارەوە",
+ heroTag:"ئامرازی مامۆستا بۆ دروستکردنی ڕاهێنان، یاری پۆل، خاڵ و نمرەکان — هەمووی لە یەک شوێنی ئاسوودەدا.",
+ whatTitle:"هەرچی دەیڵێیتەوە، لە یەک پۆلدا",
+ whatSub:"ڕۆنا کلاسرووم+ توانای وانەکەت فراوان دەکات. ڕاهێنانی خۆت دروست بکە، بیکە بە یاری، خاڵ بدە بە قوتابییەکان، و نمرەکان ڕێکخراو بهێڵەرەوە.",
+ f1t:"هەر ڕاهێنانێک دروست بکە",f1d:"هەڵبژاردنی فرە، ڕاست/هەڵە، نووسینی وەڵام، هێڵکێشان بە ژێر وشەدا، جووتکردن، پڕکردنەوەی بۆشایی و ڕیزکردن. حەوت شێواز، ناوەڕۆکی خۆت.",
+ f2t:"خاڵی ڕاستەوخۆی پۆل",f2d:"قوتابییەکان زیاد بکە لەگەڵ وێنۆچکەی خۆیان، خاڵ بدە یان کەم بکە، و بە هەڵبژاردنی هەڕەمەکی بڵێ کێ وەڵام بداتەوە.",
+ f3t:"بیکە بە یاری",f3d:"تەختەی تیم، چەرخی بەخت، پێشبڕکێی جووتکردن و ڕاکردنی پرسیار. هەمان پرسیار، پۆلێک کە لەناکاو بەئاگا دێت.",
+ f4t:"نمرەی پارێزراو",f4d:"بەشداری، ڕەفتار و تاقیکردنەوەکان لە یەک خشتەدا، بە وشەی نهێنی خۆت داخراوە.",
+ howTitle:"لە خولەکێکدا ئامادەیە",howSub:"بێ دامەزراندن و ڕێکخستن. هەژماری مامۆستا دروست بکە، پۆلەکەت هەڵبژێرە، دەست پێبکە.",
+ s1t:"هەژمارەکەت دروست بکە",s1d:"ئیمەیڵ، وشەی نهێنی، بابەتەکەت و کۆدی مامۆستا لە قوتابخانەکەت.",
+ s2t:"پۆلەکەت هەڵبژێرە",s2d:"هەر پۆلێک قوتابی و ڕاهێنان و خاڵ و نمرەی خۆی هەیە.",
+ s3t:"یەکەم ڕاهێنان دروست بکە",s3d:"جارێک پرسیارەکان بنووسە، چەند جارێک بتەوێت لەسەر تەختە بیگێڕە.",
+ s4t:"وانە بڵێوە",s4d:"خاڵەکان دەفڕن، قوتابییەکان پێشبڕکێ دەکەن، و دەفتەری نمرە خۆی پڕ دەبێت.",
+ ctaTitle:"ئامادەی بۆ پۆلەکەت؟",ctaSub:"تەنها بۆ مامۆستایان — پێویستت بە کۆدی قوتابخانەکەتە.",
+ createAccount:"هەژماری مامۆستا دروست بکە",protoNote:"نموونەی تاقیکردنەوە — هەمووی تەنها لەسەر ئەم ئامێرە پاشەکەوت دەبێت",
+ navHome:"سەرەتا",navEx:"ڕاهێنانەکان",navPts:"خاڵی پۆل",navGames:"یاری ڕاهێنان",navGrades:"نمرەکان",
+ fullName:"ناوی تەواو",email:"ئیمەیڵ",password:"وشەی نهێنی",confirmPw:"دووبارەکردنەوەی وشەی نهێنی",subject:"بابەتی وانەکەت",
+ teacherCode:"کۆدی مامۆستا",teacherCodeHint:"ئەم کۆدە لە بەڕێوەبەرایەتی قوتابخانە وەربگرە.",
+ welcomeBack:"بەخێربێیتەوە",welcomeSub:"بچۆ ژوورەوە بۆ پۆلەکەت.",joinTitle:"هەژماری مامۆستاکەت دروست بکە",joinSub:"تەنها مامۆستایانی خاوەن کۆدی قوتابخانە.",
+ errFill:"تکایە هەموو خانەکان پڕ بکەرەوە.",errPwMatch:"هەردوو وشەی نهێنی وەک یەک نین.",errPwShort:"وشەی نهێنی دەبێت لانیکەم ٦ پیت بێت.",
+ errCode:"کۆدی مامۆستا هەڵەیە.",errEmailUsed:"هەژمارێک بەم ئیمەیڵە هەیە.",errNoUser:"هیچ هەژمارێک بەم ئیمەیڵە نییە.",
+ errWrongPw:"وشەی نهێنی هەڵەیە.",errEmail:"تکایە ئیمەیڵێکی دروست بنووسە.",
+ signOut:"چوونەدەرەوە",
+ yourClasses:"پۆلەکانت",pickClassSub:"پۆلێک هەڵبژێرە یان پۆلێکی نوێ دروست بکە.",createClass:"پۆل دروست بکە",className:"ناوی پۆل",gradeLevel:"پۆل / ئاست",
+ classHint:"وەک: حەوتی ب، ئاستی ٣، دەستپێکەر",newClass:"پۆلی نوێ",enterClass:"بچۆ ژوورەوە",noClasses:"هێشتا هیچ پۆلێک نییە.",classCreated:"پۆل دروستکرا",
+ switchClass:"گۆڕینی پۆل",students:"قوتابی",
+ homeSub:"دۆخی پۆلەکەت لێرەدایە.",totalPoints:"خاڵی پۆل",exDone:"ڕاهێنانی گێڕدراو",thisWeek:"ئەم هەفتەیە",
+ mistakes:"هەڵەکانی ئەم هەفتەیە",studentsN:"قوتابییان",avgScore:"ناوەندی نمرە",exMade:"ڕاهێنانی دروستکراو",gamesMade:"یاری دروستکراو",
+ topStudents:"باشترین قوتابییان",recentActivity:"چالاکی دواییەکان",noActivity:"هێشتا هیچ — ڕاهێنانێک بگێڕە و لێرە دەردەکەوێت.",
+ quickActions:"کردارە خێراکان",qaEx:"ڕاهێنان دروست بکە",qaPts:"خاڵ بدە",qaGame:"یاری دەستپێبکە",qaGrades:"نمرەکان بکەرەوە",noStudentsYet:"قوتابییەکانت لە خاڵی پۆل زیاد بکە.",
+ exSub:"جارێک دروستی بکە، لە هەموو وانەیەکدا بیگێڕە.",newExercise:"ڕاهێنانی نوێ",exName:"ناوی ڕاهێنان",unit:"یەکە / بابەت",
+ questions:"پرسیارەکان",addQuestion:"پرسیار زیاد بکە",chooseType:"جۆری پرسیار هەڵبژێرە",save:"پاشەکەوت",cancel:"هەڵوەشاندنەوە",edit:"دەستکاری",del:"سڕینەوە",play:"گێڕان",
+ noExercises:"هیچ ڕاهێنانێک نییە",noExercisesSub:"دوگمەی + دابگرە بۆ دروستکردنی یەکەمیان.",
+ mcq:"هەڵبژاردنی فرە",truefalse:"ڕاست / هەڵە",typeAns:"وەڵام بنووسە",underline:"هێڵ بە ژێر وشەدا",matchP:"جووتکردن",blanksT:"بۆشایی پڕ بکەرەوە",orderT:"ڕیزی بکە",
+ questionText:"پرسیار",optionN:"هەڵبژاردە",correctAns:"وەڵامی ڕاست",addOption:"هەڵبژاردە زیاد بکە",acceptedAns:"وەڵامە قبوڵکراوەکان (بە کۆما جیا بکەرەوە)",
+ pairs:"جووتەکان",leftSide:"ڕاست",rightSide:"چەپ",addPair:"جووت زیاد بکە",items:"بڕگەکان بە ڕیزی دروست",addItem:"بڕگە زیاد بکە",
+ tokensHelp:"ڕستەکە بنووسە، پاشان ئەو وشانە دابگرە کە دەبێت هێڵیان بە ژێردا بێت.",buildTokens:"وشەکان بهێنە",
+ blanksHelp:"ڕستەکە بنووسە و *** لە جێی بۆشاییەکە دابنێ. نموونە: پشیلەکە *** لەسەر بەرماڵەکە.",
+ needTitle:"سەرەتا ناوێک بدە بە ڕاهێنانەکە.",needQuestions:"لانیکەم یەک پرسیار زیاد بکە.",saved:"پاشەکەوتکرا",deleted:"سڕایەوە",
+ confirmDel:"بیسڕمەوە؟ ناگەڕێتەوە.",trueT:"ڕاست",falseT:"هەڵە",qsCount:"پرسیار",never:"نەگێڕدراوە",lastPlayed:"دوا گێڕان",
+ question:"پرسیار",ofT:"لە",score:"خاڵ",nextQ:"دواتر",finish:"کۆتایی",checkAns:"پشکنین",correctT:"ڕاستە!",wrongT:"نا، وا نییە",
+ results:"ئەنجامەکان",playAgain:"دووبارە بیگێڕە",exitT:"دەرچوون",greatJob:"کارێکی نایاب!",goodJob:"باش بوو!",keepGoing:"بەردەوام بە!",
+ rightAnswers:"ڕاست",wrongAnswers:"هەڵە",answerWas:"وەڵام:",tapWords:"وشەکان دابگرە بۆ هێڵکێشان.",
+ ptsSub:"ڕاستەوخۆ خاڵ بدە بە پۆلەکە.",addStudent:"قوتابی زیاد بکە",studentName:"ناوی قوتابی",pickAvatar:"وێنۆچکە هەڵبژێرە",
+ classTotal:"کۆی پۆل",randomPicker:"هەڵبژاردنی هەڕەمەکی",pickStudent:"قوتابییەک هەڵبژێرە",picking:"هەڵدەبژێرێت…",spinAgain:"دووبارە هەڵبژێرە",
+ noStudents:"هیچ قوتابییەک نییە",noStudentsSub:"لیستی پۆلەکەت زیاد بکە و یەکەم خاڵ بدە.",
+ awardAll:"بە هەمووان +1 بدە",resetPts:"سفرکردنی خاڵەکان",resetConfirm:"خاڵی هەموو قوتابییەک بکەم بە سفر؟",history:"مێژووی خاڵەکان",noHistory:"هێشتا خاڵ نەدراوە.",
+ added:"زیادکرا",pointsW:"خاڵ",
+ gamesSub:"هەمان پرسیار، ژاوەژاوی زۆرتر.",newGame:"یاری نوێ",gameName:"ناوی یاری",gameMode:"جۆری یاری",
+ teamBoard:"تەختەی تیم",teamBoardD:"خانەیەک هەڵبژێرە، وەڵام بدەرەوە، خاڵی نهێنی ببە",spinWheel:"چەرخی بەخت",spinWheelD:"چەرخەکە پرسیار هەڵدەبژێرێت",
+ matchUp:"جووتکردن",matchUpD:"پێشبڕکێ بکە بۆ جووتکردنی هەمووی",quizRace:"ڕاکردنی پرسیار",quizRaceD:"پێش کاتەکە بکەوە، پرسیار بە پرسیار",
+ questionSource:"پرسیارەکان لە کوێوە دێن؟",fromExercise:"لە ڕاهێنانێکەوە",writeOwn:"لێرە بینووسە",pickExercise:"ڕاهێنانێک هەڵبژێرە",
+ qAnswer:"وەڵام",addQA:"پرسیار زیاد بکە",teamsT:"تیمەکان",teamCount:"چەند تیم؟",startGame:"یاری دەستپێبکە",
+ noGames:"هیچ یارییەک نییە",noGamesSub:"یارییەک دروست بکە و سەیری پۆلەکە بکە.",needQA:"لانیکەم دوو پرسیار زیاد بکە.",needExercise:"سەرەتا ڕاهێنانێک هەڵبژێرە.",
+ turnOf:"نۆرەی:",teamN:"تیم",gameOver:"یاری تەواو بوو!",winnerIs:"براوە:",tie:"یەکسانە!",spinT:"بیسووڕێنە",timeLeft:"کات",allMatched:"هەمووی جووتکرا!",
+ pickTile:"خانەیەک هەڵبژێرە",mysteryPts:"خاڵی نهێنی:",noExForGame:"سەرەتا پێویستت بە ڕاهێنانێکی پرسیاردارە.",
+ gradesSub:"بەشداری، ڕەفتار و تاقیکردنەوەکان.",locked:"نمرەکان داخراون",lockedSub:"وشەی نهێنی هەژمارەکەت بنووسە بۆ کردنەوەی دەفتەری نمرە.",
+ unlock:"کردنەوە",wrongPw:"وشەی نهێنی هەڵەیە.",student:"قوتابی",participation:"بەشداری",behavior:"ڕەفتار",testsT:"تاقیکردنەوە",
+ addTest:"تاقیکردنەوە زیاد بکە",testName:"ناوی تاقیکردنەوە",maxScore:"لە",avgT:"ناوەند",gradeT:"پلە",totalT:"کۆ",gradesSaved:"نمرەکان پاشەکەوتکران",
+ noStudentsGrades:"سەرەتا قوتابییەکان لە خاڵی پۆل زیاد بکە.",outOf10:"لە ١٠",lockAgain:"داخستن",removeTest:"لابردنی تاقیکردنەوە",
+ manageHint:"لێهاتووییەک دابگرە بۆ دەستکاری، یان یەکێکی نوێ زیاد بکە.",
+ givePoint:"خاڵ بدە",positiveT:"ئەرێنی",needsWork:"پێویستی بە چاکسازییە",manageSkills:"بەڕێوەبردنی لێهاتووییەکان",
+ newSkill:"لێهاتوویی نوێ",editSkill:"دەستکاری لێهاتوویی",skillName:"ناو",skillPts:"خاڵ",skillIcon:"ئایکۆن",
+ addSkillT:"لێهاتوویی زیاد بکە",delSkill:"سڕینەوەی لێهاتوویی",skillSaved:"پاشەکەوتکرا",needSkillName:"ناوێک بدە بە لێهاتووییەکە.",
+ noSkillsYet:"هێشتا هیچ لێهاتوویەک نییە — یەکێک زیاد بکە.",totalPts:"کۆ",tapSkill:"لێهاتووییەک دابگرە بۆ بەخشینی.",
+ skParticipate:"بەشداری",skGoodAnswer:"وەڵامی باش",skHelping:"یارمەتیدان",skHomework:"ئەرکی ماڵەوە",
+ skOnTask:"سەرقاڵی کار",skEffort:"هەوڵی نایاب",skTeamwork:"کاری تیمی",skImproved:"باشتر بووە",
+ skOffTask:"سەرقاڵی کار نییە",skTalking:"بێ مۆڵەت قسە دەکات",skNoHw:"ئەرکی نەکردووە",skLate:"دواکەوتووە",skDisrespect:"بێڕێزی",
+ close:"داخستن",back:"گەڕانەوە",done:"تەواو",yes:"بەڵێ",no:"نەخێر",create:"دروستکردن",search:"گەڕان",
+}};
+const LANGS=[{id:'en',n:'EN'},{id:'ku',n:'كوردی'},{id:'ar',n:'عربي'}];
+function t(k){const L=I18N[DB.lang]||I18N.en;return (L[k]!==undefined?L[k]:(I18N.en[k]!==undefined?I18N.en[k]:k))}
+function isRTL(){return DB.lang==='ar'||DB.lang==='ku'}
+function setLang(l){
+  DB.lang=l;save();
+  document.documentElement.lang=l;
+  document.documentElement.dir=isRTL()?'rtl':'ltr';
+  document.body.className='lang-'+l;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
+  renderLangPills();
+  if(document.getElementById('app').classList.contains('show')){renderNav();render()}
+}
+function renderLangPills(){
+  document.querySelectorAll('.lang-pill').forEach(p=>{
+    p.innerHTML=LANGS.map(l=>`<button class="${l.id===DB.lang?'on':''}" onclick="setLang('${l.id}')">${l.n}</button>`).join('');
+  });
+}
+
+/* ---------- toast ---------- */
+function toast(msg,kind){
+  const w=document.getElementById('toasts');
+  const d=document.createElement('div');d.className='toast '+(kind||'');d.textContent=msg;
+  w.appendChild(d);setTimeout(()=>{d.style.opacity=0;d.style.transform='translateY(14px)';d.style.transition='.3s';setTimeout(()=>d.remove(),320)},2100);
+}
+
+/* ---------- sound ---------- */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,dur,type,vol,delay){
+  const c=ac();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type||'sine';o.frequency.value=f;
+  const s=c.currentTime+(delay||0);
+  g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(vol||.16,s+.015);
+  g.gain.exponentialRampToValueAtTime(.0001,s+dur);
+  o.connect(g);g.connect(c.destination);o.start(s);o.stop(s+dur+.03);
+}
+const SFX={
+  pop:()=>{tone(620,.1,'sine',.16);tone(880,.1,'sine',.12,.05)},
+  plus:()=>{tone(523,.12,'triangle',.15);tone(659,.12,'triangle',.15,.07);tone(784,.2,'triangle',.14,.14)},
+  minus:()=>{tone(330,.14,'sawtooth',.1);tone(220,.22,'sawtooth',.09,.1)},
+  right:()=>{tone(659,.11,'sine',.16);tone(880,.11,'sine',.16,.08);tone(1174,.26,'sine',.13,.16)},
+  wrong:()=>{tone(200,.26,'square',.08);tone(150,.3,'square',.07,.1)},
+  tick:()=>{tone(1200,.035,'square',.045)},
+  win:()=>{[523,659,784,1046,1318].forEach((f,i)=>tone(f,.3,'triangle',.14,i*.1))},
+  spin:()=>{tone(440,.06,'square',.06)},
+  flip:()=>{tone(760,.07,'sine',.1)}
+};
+
+/* ---------- modal helpers ---------- */
+function openSheet(html,size){
+  const ov=document.getElementById('ov'),sh=document.getElementById('sheet');
+  sh.className='sheet '+(size||'');sh.innerHTML=html;ov.classList.add('show');
+  ov.onclick=e=>{if(e.target===ov)closeSheet()};
+}
+function closeSheet(){
+  const ov=document.getElementById('ov');ov.classList.remove('show');
+  /* drop the old markup so stale ids can't shadow the live page */
+  setTimeout(()=>{if(!ov.classList.contains('show'))document.getElementById('sheet').innerHTML=''},300);
+}
+function confirmBox(msg,cb){
+  openSheet(`<div class="sheet-head"><h3>${msg}</h3></div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-ghost btn-block" onclick="closeSheet()">${t('cancel')}</button>
+    <button class="btn btn-primary btn-block" id="cfYes">${t('yes')}</button>
+  </div>`);
+  document.getElementById('cfYes').onclick=()=>{closeSheet();cb()};
+}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- confetti ---------- */
+function confetti(n){
+  const c=document.createElement('div');c.className='confetti';document.body.appendChild(c);
+  const cols=['#a8323f','#c4717a','#e0b354','#eccf8e','#8f2436','#5c9b78'];
+  for(let i=0;i<(n||70);i++){
+    const p=document.createElement('i');
+    p.style.left=Math.random()*100+'vw';p.style.top='-30px';
+    p.style.background=cols[(Math.random()*cols.length)|0];
+    p.style.animationDuration=(1.9+Math.random()*1.6)+'s';
+    p.style.animationDelay=(Math.random()*.5)+'s';
+    p.style.transform='rotate('+Math.random()*360+'deg)';
+    if(Math.random()>.6)p.style.borderRadius='50%';
+    c.appendChild(p);
+  }
+  setTimeout(()=>c.remove(),4200);
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+const TEACHER_CODE='xqcz74';
+const SUBJECTS=['English','Mathematics','Science','Kurdish','Arabic','Physics','Chemistry','Biology','History','Geography','Computer','Islamic studies','Art','Sport','Music','Other'];
+
+function openAuth(mode){
+  const up=mode==='up';
+  openSheet(`
+    <div class="sheet-head">
+      <div><h3>${up?t('joinTitle'):t('welcomeBack')}</h3><p>${up?t('joinSub'):t('welcomeSub')}</p></div>
+      <button class="x" onclick="closeSheet()">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="${!up?'on':''}" onclick="openAuth('in')">${t('signIn')}</button>
+      <button class="${up?'on':''}" onclick="openAuth('up')">${t('signUp')}</button>
+    </div>
+    <div id="authErr"></div>
+    ${up?`<label class="field"><span>${t('fullName')}</span><input class="input" id="aName" autocomplete="name"></label>`:''}
+    <label class="field"><span>${t('email')}</span><input class="input" id="aMail" type="email" autocomplete="email" inputmode="email"></label>
+    ${up?`<label class="field"><span>${t('subject')}</span><select class="input" id="aSub">${SUBJECTS.map(s=>`<option>${s}</option>`).join('')}</select></label>`:''}
+    <label class="field"><span>${t('password')}</span><input class="input" id="aPw" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
+    ${up?`<label class="field"><span>${t('confirmPw')}</span><input class="input" id="aPw2" type="password" autocomplete="new-password"></label>
+    <label class="field"><span>${t('teacherCode')}</span><input class="input" id="aCode" placeholder="••••••"><div class="hint">${t('teacherCodeHint')}</div></label>`:''}
+    <button class="btn btn-primary btn-block btn-lg" style="margin-top:6px" id="authGo">${up?t('createAccount'):t('signIn')}</button>
+  `);
+  document.getElementById('authGo').onclick=()=>up?doSignUp():doSignIn();
+  ['aMail','aPw','aPw2','aCode','aName'].forEach(id=>{const el=document.getElementById(id);if(el)el.onkeydown=e=>{if(e.key==='Enter')up?doSignUp():doSignIn()}});
+}
+function authErr(m){document.getElementById('authErr').innerHTML=`<div class="err">${m}</div>`}
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+
+function doSignUp(){
+  const name=val('aName'),mail=val('aMail').toLowerCase(),sub=val('aSub'),pw=val('aPw'),pw2=val('aPw2'),code=val('aCode');
+  if(!name||!mail||!pw||!pw2||!code)return authErr(t('errFill'));
+  if(!/^\S+@\S+\.\S+$/.test(mail))return authErr(t('errEmail'));
+  if(pw.length<6)return authErr(t('errPwShort'));
+  if(pw!==pw2)return authErr(t('errPwMatch'));
+  if(code.toLowerCase()!==TEACHER_CODE)return authErr(t('errCode'));
+  if(DB.teachers.some(x=>x.email===mail))return authErr(t('errEmailUsed'));
+  const tt={id:uid(),name,email:mail,subject:sub,pw,created:Date.now()};
+  DB.teachers.push(tt);DB.session={teacherId:tt.id,classId:null};save();
+  SFX.right();closeSheet();openClassPicker(true);
+}
+function doSignIn(){
+  const mail=val('aMail').toLowerCase(),pw=val('aPw');
+  if(!mail||!pw)return authErr(t('errFill'));
+  const tt=DB.teachers.find(x=>x.email===mail);
+  if(!tt)return authErr(t('errNoUser'));
+  if(tt.pw!==pw)return authErr(t('errWrongPw'));
+  DB.session={teacherId:tt.id,classId:null};save();
+  SFX.pop();closeSheet();openClassPicker(true);
+}
+function signOut(){DB.session=null;save();document.getElementById('app').classList.remove('show');document.getElementById('landing').style.display='';window.scrollTo(0,0);closeMenu()}
+
+/* ============================================================
+   CLASSES
+   ============================================================ */
+const CLASS_ICONS=['🏫','📚','🧪','🔢','🌍','🎨','🎵','⚽','💻','🧬','🗺️','✏️'];
+function openClassPicker(first){
+  const cs=myClasses();
+  openSheet(`
+    <div class="sheet-head">
+      <div><h3>${t('yourClasses')}</h3><p>${t('pickClassSub')}</p></div>
+      ${first?'':`<button class="x" onclick="closeSheet()">✕</button>`}
+    </div>
+    ${cs.length?`<div class="class-list">${cs.map(c=>`
+      <button class="class-row" onclick="enterClass('${c.id}')">
+        <div class="av">${c.icon||'🏫'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="nm">${esc(c.name)}</div>
+          <div class="sub">${esc(c.grade||'')} · ${c.students.length} ${t('students')} · ${c.exercises.length} ${t('navEx').toLowerCase()}</div>
+        </div>
+        <div style="color:var(--red-soft);font-weight:900">${isRTL()?'‹':'›'}</div>
+      </button>`).join('')}</div>`
+    :`<div class="empty" style="padding:26px"><div class="big">🏫</div><p>${t('noClasses')}</p></div>`}
+    <div style="border-top:1.5px solid var(--line);padding-top:16px;margin-top:6px">
+      <div style="font-weight:900;color:var(--red-ink);margin-bottom:12px">${t('createClass')}</div>
+      <label class="field"><span>${t('className')}</span><input class="input" id="cName" placeholder="${t('classHint')}"></label>
+      <label class="field"><span>${t('gradeLevel')}</span><input class="input" id="cGrade"></label>
+      <div class="av-pick" id="cIcons" style="margin-bottom:14px">${CLASS_ICONS.map((i,x)=>`<button class="${x===0?'on':''}" onclick="pickClassIcon(this)">${i}</button>`).join('')}</div>
+      <button class="btn btn-yel btn-block" onclick="createClass()">${t('createClass')}</button>
+    </div>
+  `,'wide');
+}
+function pickClassIcon(b){document.querySelectorAll('#cIcons button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+function createClass(){
+  const n=val('cName'),g=val('cGrade');
+  if(!n)return toast(t('errFill'),'bad');
+  const ic=document.querySelector('#cIcons button.on');
+  const c={id:uid(),teacherId:teacher().id,name:n,grade:g,icon:ic?ic.textContent:'🏫',
+    students:[],exercises:[],games:[],plays:[],grades:{},tests:[],created:Date.now()};
+  DB.classes.push(c);save();SFX.plus();toast(t('classCreated'),'good');
+  enterClass(c.id);
+}
+function enterClass(id){
+  DB.session.classId=id;save();closeSheet();
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').classList.add('show');
+  gradesUnlocked=false;
+  renderNav();go('home');
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   NAV / ROUTER
+   ============================================================ */
+const PAGES=[
+  {id:'home',i:'🏠',k:'navHome'},
+  {id:'ex',i:'📝',k:'navEx'},
+  {id:'pts',i:'⭐',k:'navPts'},
+  {id:'games',i:'🎮',k:'navGames'},
+  {id:'grades',i:'🔒',k:'navGrades'},
+];
+let PAGE='home';
+function renderNav(){
+  document.getElementById('nav').innerHTML=PAGES.map(p=>
+    `<button class="${p.id===PAGE?'on':''}" onclick="go('${p.id}')"><span class="lk">${p.i}</span>${t(p.k)}</button>`).join('');
+  const k=klass();
+  document.getElementById('classBtnName').textContent=k?k.name:'—';
+  const tt=teacher();
+  document.getElementById('avBtn').textContent=tt?tt.name.trim().charAt(0).toUpperCase():'T';
+  document.getElementById('navLogo').innerHTML=ronaLogo();
+}
+function go(p){PAGE=p;renderNav();render();window.scrollTo({top:0,behavior:'smooth'})}
+function render(){
+  const v=document.getElementById('view'),f=document.getElementById('fab');
+  f.classList.add('hidden');f.onclick=null;
+  if(!klass()){v.innerHTML='';return}
+  if(PAGE==='home')pageHome(v);
+  else if(PAGE==='ex')pageExercises(v);
+  else if(PAGE==='pts')pagePoints(v);
+  else if(PAGE==='games')pageGames(v);
+  else if(PAGE==='grades')pageGrades(v);
+}
+function setFab(fn){const f=document.getElementById('fab');f.classList.remove('hidden');f.onclick=fn}
+
+/* teacher menu */
+let menuEl=null;
+function toggleMenu(e){
+  e.stopPropagation();
+  if(menuEl){closeMenu();return}
+  const tt=teacher();
+  menuEl=document.createElement('div');menuEl.className='menu';
+  menuEl.innerHTML=`
+    <div class="who"><b>${esc(tt.name)}</b><span>${esc(tt.subject)} · ${esc(tt.email)}</span></div>
+    <div class="lang-pill" style="margin:6px 8px 10px"></div>
+    <button onclick="closeMenu();openClassPicker()">🏫 ${t('switchClass')}</button>
+    <button onclick="signOut()">🚪 ${t('signOut')}</button>`;
+  document.getElementById('app').appendChild(menuEl);
+  renderLangPills();
+  setTimeout(()=>document.addEventListener('click',closeMenu,{once:true}),0);
+}
+function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}}
+</script>
+<script>
+/* ============================================================
+   HOME
+   ============================================================ */
+const WEEK=7*24*3600*1000;
+function classStats(){
+  const c=klass();
+  const plays=c.plays||[],log=c.log||[],now=Date.now();
+  const wk=plays.filter(p=>now-p.date<WEEK);
+  const totalPts=c.students.reduce((a,s)=>a+s.points,0);
+  const corr=plays.reduce((a,p)=>a+p.correct,0),tot=plays.reduce((a,p)=>a+p.total,0);
+  return{
+    totalPts,plays:plays.length,week:wk.length,
+    mistakes:wk.reduce((a,p)=>a+(p.total-p.correct),0),
+    students:c.students.length,
+    avg:tot?Math.round(corr/tot*100):0,
+    exercises:c.exercises.length,games:(c.games||[]).length,
+    recent:[...plays.map(p=>({ts:p.date,ic:'📝',t:p.title,s:`${p.correct}/${p.total} · ${Math.round(p.correct/Math.max(1,p.total)*100)}%`})),
+            ...log.slice(-14).map(l=>({ts:l.ts,ic:l.delta>0?'⭐':'⚠️',t:l.name,s:(l.delta>0?'+':'')+l.delta+' '+t('pointsW')}))]
+            .sort((a,b)=>b.ts-a.ts).slice(0,9)
+  };
+}
+function fmtDate(ts){
+  const d=new Date(ts),n=new Date(),diff=(n-ts)/1000;
+  if(diff<60)return 'now';
+  if(diff<3600)return Math.floor(diff/60)+'m';
+  if(diff<86400)return Math.floor(diff/3600)+'h';
+  return d.getDate()+'/'+(d.getMonth()+1);
+}
+function pageHome(v){
+  const c=klass(),s=classStats();
+  const top=[...c.students].sort((a,b)=>b.points-a.points).slice(0,5);
+  const max=Math.max(1,...top.map(x=>Math.abs(x.points)));
+  v.innerHTML=`
+  <div class="page-head">
+    <div><h2>${esc(c.name)} ${c.icon||''}</h2><p>${esc(c.grade||'')} · ${t('homeSub')}</p></div>
+    <div class="chip">${esc(teacher().subject)}</div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat y"><div class="ic">⭐</div><div class="v">${s.totalPts}</div><div class="l">${t('totalPoints')}</div></div>
+    <div class="stat r"><div class="ic">📝</div><div class="v">${s.week}</div><div class="l">${t('thisWeek')}</div></div>
+    <div class="stat b"><div class="ic">⚠️</div><div class="v">${s.mistakes}</div><div class="l">${t('mistakes')}</div></div>
+    <div class="stat g"><div class="ic">🎯</div><div class="v">${s.avg}%</div><div class="l">${t('avgScore')}</div></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat r"><div class="ic">👥</div><div class="v">${s.students}</div><div class="l">${t('studentsN')}</div></div>
+    <div class="stat y"><div class="ic">📚</div><div class="v">${s.exercises}</div><div class="l">${t('exMade')}</div></div>
+    <div class="stat g"><div class="ic">🎮</div><div class="v">${s.games}</div><div class="l">${t('gamesMade')}</div></div>
+    <div class="stat b"><div class="ic">▶️</div><div class="v">${s.plays}</div><div class="l">${t('exDone')}</div></div>
+  </div>
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><h3>🏆 ${t('topStudents')}</h3><button class="btn btn-soft btn-sm" onclick="go('pts')">${t('navPts')}</button></div>
+      ${top.length?top.map(st=>`
+        <div class="bar-row">
+          <div class="nm">${st.avatar||'🙂'} ${esc(st.name)}</div>
+          <div class="bar"><i style="width:${Math.max(4,Math.abs(st.points)/max*100)}%"></i></div>
+          <div class="v">${st.points}</div>
+        </div>`).join('')
+      :`<div class="empty" style="padding:24px"><div class="big">👥</div><p>${t('noStudentsYet')}</p></div>`}
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>⚡ ${t('quickActions')}</h3></div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <button class="btn btn-primary btn-block" onclick="go('ex');setTimeout(()=>openExEditor(),180)">📝 ${t('qaEx')}</button>
+        <button class="btn btn-yel btn-block" onclick="go('pts')">⭐ ${t('qaPts')}</button>
+        <button class="btn btn-soft btn-block" onclick="go('games')">🎮 ${t('qaGame')}</button>
+        <button class="btn btn-ghost btn-block" onclick="go('grades')">🔒 ${t('qaGrades')}</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>🕒 ${t('recentActivity')}</h3></div>
+    ${s.recent.length?s.recent.map(r=>`
+      <div class="list-item">
+        <div class="ic">${r.ic}</div>
+        <div class="t"><b>${esc(r.t)}</b><span>${esc(r.s)}</span></div>
+        <div style="color:var(--muted);font-size:.8rem">${fmtDate(r.ts)}</div>
+      </div>`).join('')
+    :`<div class="empty"><div class="big">🕒</div><p>${t('noActivity')}</p></div>`}
+  </div>`;
+}
+
+/* ============================================================
+   EXERCISES
+   ============================================================ */
+const QTYPES=[
+  {id:'mcq',e:'🔘',k:'mcq'},{id:'tf',e:'✅',k:'truefalse'},{id:'type',e:'⌨️',k:'typeAns'},
+  {id:'underline',e:'✏️',k:'underline'},{id:'match',e:'🔗',k:'matchP'},{id:'blanks',e:'␣',k:'blanksT'},{id:'order',e:'🔢',k:'orderT'}
+];
+const qLabel=ty=>{const q=QTYPES.find(x=>x.id===ty);return q?t(q.k):ty};
+
+function pageExercises(v){
+  const c=klass();
+  setFab(()=>openExEditor());
+  v.innerHTML=`
+  <div class="page-head">
+    <div><h2>📝 ${t('navEx')}</h2><p>${t('exSub')}</p></div>
+    <button class="btn btn-primary" onclick="openExEditor()">+ ${t('newExercise')}</button>
+  </div>
+  ${c.exercises.length?`<div class="ex-grid">${c.exercises.map(x=>`
+    <div class="ex-card">
+      <div class="top">
+        <h4>${esc(x.title)}</h4>
+        <button class="icon-btn danger" onclick="delExercise('${x.id}')" title="${t('del')}">🗑</button>
+      </div>
+      <div class="meta">
+        ${x.unit?`<span class="chip chip-yel">📍 ${esc(x.unit)}</span>`:''}
+        <span class="chip">${x.questions.length} ${t('qsCount')}</span>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted)">
+        ${[...new Set(x.questions.map(q=>qLabel(q.type)))].join(' · ')}
+      </div>
+      <div style="font-size:.76rem;color:var(--muted)">${x.lastPlayed?t('lastPlayed')+' '+fmtDate(x.lastPlayed):t('never')}</div>
+      <div class="acts">
+        <button class="btn btn-primary btn-sm" onclick="playExercise('${x.id}')">▶ ${t('play')}</button>
+        <button class="btn btn-soft btn-sm" onclick="openExEditor('${x.id}')">${t('edit')}</button>
+      </div>
+    </div>`).join('')}</div>`
+  :`<div class="empty"><div class="big">📝</div><h3>${t('noExercises')}</h3><p>${t('noExercisesSub')}</p>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="openExEditor()">+ ${t('newExercise')}</button></div>`}`;
+}
+function delExercise(id){
+  confirmBox(t('confirmDel'),()=>{const c=klass();c.exercises=c.exercises.filter(x=>x.id!==id);save();toast(t('deleted'));render()});
+}
+
+/* ---------- builder ---------- */
+let DRAFT=null;
+function blankQ(type){
+  const b={id:uid(),type,prompt:''};
+  if(type==='mcq')Object.assign(b,{options:['',''],correct:0});
+  if(type==='tf')b.correct=true;
+  if(type==='type')b.answers='';
+  if(type==='underline')Object.assign(b,{sentence:'',tokens:[],correct:[]});
+  if(type==='match')b.pairs=[{l:'',r:''},{l:'',r:''}];
+  if(type==='blanks')Object.assign(b,{text:'',answers:''});
+  if(type==='order')b.items=['',''];
+  return b;
+}
+function openExEditor(id){
+  const c=klass();
+  const ex=id?c.exercises.find(x=>x.id===id):null;
+  DRAFT=ex?JSON.parse(JSON.stringify(ex)):{id:uid(),title:'',unit:'',questions:[],created:Date.now()};
+  openSheet(`
+    <div class="sheet-head">
+      <div><h3>${ex?t('edit'):t('newExercise')}</h3><p>${t('exSub')}</p></div>
+      <button class="x" onclick="closeSheet()">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:12px">
+      <label class="field"><span>${t('exName')}</span><input class="input" id="exTitle" value="${esc(DRAFT.title)}"></label>
+      <label class="field"><span>${t('unit')}</span><input class="input" id="exUnit" value="${esc(DRAFT.unit)}"></label>
+    </div>
+    <div style="font-weight:900;color:var(--red-ink);margin:10px 0 10px">${t('chooseType')}</div>
+    <div class="qb-types">${QTYPES.map(q=>`<button class="qb-type" onclick="addQ('${q.id}')"><span class="e">${q.e}</span><span class="n">${t(q.k)}</span></button>`).join('')}</div>
+    <div style="font-weight:900;color:var(--red-ink);margin-bottom:10px">${t('questions')} <span id="qCount" class="chip">${DRAFT.questions.length}</span></div>
+    <div id="qList"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;position:sticky;bottom:-30px;background:#fff;padding:12px 0">
+      <button class="btn btn-ghost btn-block" onclick="closeSheet()">${t('cancel')}</button>
+      <button class="btn btn-primary btn-block" onclick="saveExercise()">${t('save')}</button>
+    </div>
+  `,'xwide');
+  renderQList();
+}
+function addQ(type){syncDraft();DRAFT.questions.push(blankQ(type));renderQList();SFX.pop();
+  setTimeout(()=>{const l=document.querySelectorAll('#qList .q-item');if(l.length)l[l.length-1].scrollIntoView({behavior:'smooth',block:'center'})},60)}
+function removeQ(i){syncDraft();DRAFT.questions.splice(i,1);renderQList()}
+function moveQ(i,d){syncDraft();const q=DRAFT.questions;if(i+d<0||i+d>=q.length)return;[q[i],q[i+d]]=[q[i+d],q[i]];renderQList()}
+function addOpt(i){syncDraft();DRAFT.questions[i].options.push('');renderQList()}
+function rmOpt(i,j){syncDraft();const q=DRAFT.questions[i];if(q.options.length<=2)return;q.options.splice(j,1);if(q.correct>=q.options.length)q.correct=0;renderQList()}
+function setCorrect(i,j){syncDraft();DRAFT.questions[i].correct=j;renderQList()}
+function setTF(i,v){syncDraft();DRAFT.questions[i].correct=v;renderQList()}
+function addPair(i){syncDraft();DRAFT.questions[i].pairs.push({l:'',r:''});renderQList()}
+function rmPair(i,j){syncDraft();const q=DRAFT.questions[i];if(q.pairs.length<=2)return;q.pairs.splice(j,1);renderQList()}
+function addItem(i){syncDraft();DRAFT.questions[i].items.push('');renderQList()}
+function rmItem(i,j){syncDraft();const q=DRAFT.questions[i];if(q.items.length<=2)return;q.items.splice(j,1);renderQList()}
+function loadTokens(i){
+  syncDraft();const q=DRAFT.questions[i];
+  q.tokens=(q.sentence||'').trim().split(/\s+/).filter(Boolean);q.correct=[];renderQList();
+}
+function toggleTok(i,j){
+  syncDraft();const q=DRAFT.questions[i];
+  const k=q.correct.indexOf(j);if(k>=0)q.correct.splice(k,1);else q.correct.push(j);
+  renderQList();SFX.flip();
+}
+/* read the DOM back into DRAFT */
+function syncDraft(){
+  if(!DRAFT)return;
+  const tEl=document.getElementById('exTitle'),uEl=document.getElementById('exUnit');
+  if(tEl)DRAFT.title=tEl.value.trim();if(uEl)DRAFT.unit=uEl.value.trim();
+  document.querySelectorAll('#qList .q-item').forEach(el=>{
+    const i=+el.dataset.i,q=DRAFT.questions[i];if(!q)return;
+    const g=s=>el.querySelector(s),ga=s=>[...el.querySelectorAll(s)];
+    if(g('.q-prompt'))q.prompt=g('.q-prompt').value;
+    if(q.type==='mcq')q.options=ga('.q-opt').map(x=>x.value);
+    if(q.type==='type')q.answers=g('.q-answers').value;
+    if(q.type==='underline')q.sentence=g('.q-sentence').value;
+    if(q.type==='match')q.pairs=ga('.q-pair').map(r=>({l:r.querySelector('.q-l').value,r:r.querySelector('.q-r').value}));
+    if(q.type==='blanks'){q.text=g('.q-text').value;q.answers=g('.q-answers').value}
+    if(q.type==='order')q.items=ga('.q-it').map(x=>x.value);
+  });
+}
+function renderQList(){
+  const w=document.getElementById('qList');if(!w)return;
+  document.getElementById('qCount').textContent=DRAFT.questions.length;
+  w.innerHTML=DRAFT.questions.map((q,i)=>{
+    let body='';
+    if(q.type==='mcq'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      ${q.options.map((o,j)=>`<div class="opt-row">
+        <button class="pick ${q.correct===j?'on':''}" onclick="setCorrect(${i},${j})" title="${t('correctAns')}">${q.correct===j?'✓':String.fromCharCode(65+j)}</button>
+        <input class="input q-opt" placeholder="${t('optionN')} ${j+1}" value="${esc(o)}">
+        ${q.options.length>2?`<button class="icon-btn danger" onclick="rmOpt(${i},${j})">✕</button>`:''}
+      </div>`).join('')}
+      <button class="btn btn-soft btn-sm" onclick="addOpt(${i})">+ ${t('addOption')}</button>`;
+    }
+    else if(q.type==='tf'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      <div style="display:flex;gap:9px">
+        <button class="btn ${q.correct===true?'btn-primary':'btn-ghost'} btn-sm" onclick="setTF(${i},true)">✓ ${t('trueT')}</button>
+        <button class="btn ${q.correct===false?'btn-primary':'btn-ghost'} btn-sm" onclick="setTF(${i},false)">✕ ${t('falseT')}</button>
+      </div>`;
+    }
+    else if(q.type==='type'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      <input class="input q-answers" placeholder="${t('acceptedAns')}" value="${esc(q.answers)}">`;
+    }
+    else if(q.type==='underline'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      <div style="display:flex;gap:9px;margin-bottom:10px">
+        <input class="input q-sentence" placeholder="${t('tokensHelp')}" value="${esc(q.sentence)}">
+        <button class="btn btn-soft btn-sm" onclick="loadTokens(${i})" style="flex:0 0 auto">${t('buildTokens')}</button>
+      </div>
+      ${q.tokens.length?`<div class="tok-pick">${q.tokens.map((w2,j)=>`<button class="tok ${q.correct.includes(j)?'on':''}" onclick="toggleTok(${i},${j})">${esc(w2)}</button>`).join('')}</div>
+      <div class="hint">${t('tapWords')}</div>`:`<div class="hint">${t('tokensHelp')}</div>`}`;
+    }
+    else if(q.type==='match'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      ${q.pairs.map((p,j)=>`<div class="opt-row q-pair">
+        <input class="input q-l" placeholder="${t('leftSide')} ${j+1}" value="${esc(p.l)}">
+        <span style="color:var(--muted);font-weight:900">↔</span>
+        <input class="input q-r" placeholder="${t('rightSide')} ${j+1}" value="${esc(p.r)}">
+        ${q.pairs.length>2?`<button class="icon-btn danger" onclick="rmPair(${i},${j})">✕</button>`:''}
+      </div>`).join('')}
+      <button class="btn btn-soft btn-sm" onclick="addPair(${i})">+ ${t('addPair')}</button>`;
+    }
+    else if(q.type==='blanks'){
+      body=`<textarea class="input q-text" placeholder="${t('blanksHelp')}">${esc(q.text)}</textarea>
+      <div class="hint" style="margin-bottom:10px">${t('blanksHelp')}</div>
+      <input class="input q-answers" placeholder="${t('acceptedAns')}" value="${esc(q.answers)}">`;
+    }
+    else if(q.type==='order'){
+      body=`<input class="input q-prompt" placeholder="${t('questionText')}" value="${esc(q.prompt)}" style="margin-bottom:10px">
+      ${q.items.map((it,j)=>`<div class="opt-row">
+        <span class="pick">${j+1}</span>
+        <input class="input q-it" placeholder="${t('addItem')} ${j+1}" value="${esc(it)}">
+        ${q.items.length>2?`<button class="icon-btn danger" onclick="rmItem(${i},${j})">✕</button>`:''}
+      </div>`).join('')}
+      <button class="btn btn-soft btn-sm" onclick="addItem(${i})">+ ${t('addItem')}</button>
+      <div class="hint">${t('items')}</div>`;
+    }
+    return `<div class="q-item" data-i="${i}" data-type="${q.type}">
+      <div class="qhead">
+        <span class="num">${i+1}</span>
+        <span class="chip">${qLabel(q.type)}</span>
+        <div style="margin-inline-start:auto;display:flex;gap:6px">
+          <button class="icon-btn" onclick="moveQ(${i},-1)">↑</button>
+          <button class="icon-btn" onclick="moveQ(${i},1)">↓</button>
+          <button class="icon-btn danger" onclick="removeQ(${i})">🗑</button>
+        </div>
+      </div>${body}</div>`;
+  }).join('');
+}
+function saveExercise(){
+  syncDraft();
+  if(!DRAFT.title)return toast(t('needTitle'),'bad');
+  if(!DRAFT.questions.length)return toast(t('needQuestions'),'bad');
+  const c=klass(),i=c.exercises.findIndex(x=>x.id===DRAFT.id);
+  if(i>=0)c.exercises[i]=DRAFT;else c.exercises.push(DRAFT);
+  save();closeSheet();SFX.right();toast(t('saved'),'good');render();
+}
+
+/* ============================================================
+   PLAYER
+   ============================================================ */
+let PL=null;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>String(s||'').trim().toLowerCase().replace(/[.,!?؟،؛]/g,'');
+
+function playExercise(id){
+  const c=klass(),ex=c.exercises.find(x=>x.id===id);
+  if(!ex||!ex.questions.length)return toast(t('needQuestions'),'bad');
+  PL={ex,i:0,correct:0,answered:false,state:null};
+  document.getElementById('player').classList.add('show');
+  drawQ();
+}
+function exitPlayer(){document.getElementById('player').classList.remove('show');PL=null;render()}
+function drawQ(){
+  const p=document.getElementById('player'),q=PL.ex.questions[PL.i],n=PL.ex.questions.length;
+  PL.answered=false;PL.state=null;
+  let body='';
+  if(q.type==='mcq'){
+    body=`<div class="prompt">${esc(q.prompt)}</div>
+    <div class="opts">${q.options.map((o,j)=>`<button class="opt" data-j="${j}" onclick="ansMCQ(${j},${q.correct})">${esc(o)}</button>`).join('')}</div>`;
+  }
+  else if(q.type==='tf'){
+    body=`<div class="prompt">${esc(q.prompt)}</div>
+    <div class="opts" style="max-width:520px;margin:0 auto">
+      <button class="opt" data-j="1" onclick="ansMCQ(1,${q.correct?1:0})">✅ ${t('trueT')}</button>
+      <button class="opt" data-j="0" onclick="ansMCQ(0,${q.correct?1:0})">❌ ${t('falseT')}</button>
+    </div>`;
+  }
+  else if(q.type==='type'){
+    body=`<div class="prompt">${esc(q.prompt)}</div>
+    <div class="type-in"><input id="tyIn" autocomplete="off" placeholder="…"></div>`;
+  }
+  else if(q.type==='underline'){
+    body=`<div class="prompt">${esc(q.prompt||t('tapWords'))}</div>
+    <div class="sent" id="sent">${q.tokens.map((w,j)=>`<span class="w" data-j="${j}" onclick="tapWord(${j})">${esc(w)}</span>`).join('')}</div>`;
+    PL.state={sel:[]};
+  }
+  else if(q.type==='match'){
+    const L=q.pairs.map((p2,j)=>({t:p2.l,j})),R=shuffle(q.pairs.map((p2,j)=>({t:p2.r,j})));
+    PL.state={L,R,sel:null,done:0};
+    body=`<div class="prompt">${esc(q.prompt||t('matchP'))}</div>
+    <div class="match-cols">
+      <div class="match-col">${L.map(x=>`<button class="mi" data-side="l" data-j="${x.j}" onclick="tapMatch('l',${x.j})">${esc(x.t)}</button>`).join('')}</div>
+      <div class="match-col">${R.map(x=>`<button class="mi" data-side="r" data-j="${x.j}" onclick="tapMatch('r',${x.j})">${esc(x.t)}</button>`).join('')}</div>
+    </div>`;
+  }
+  else if(q.type==='blanks'){
+    let k=0;
+    const html=esc(q.text).split('***').reduce((acc,part,idx,arr)=>acc+part+(idx<arr.length-1?`<input data-k="${k++}" autocomplete="off">`:''),'');
+    PL.state={count:k};
+    body=`<div class="blanks" id="blanks">${html}</div>`;
+  }
+  else if(q.type==='order'){
+    PL.state={order:shuffle(q.items.map((x,j)=>j))};
+    body=`<div class="prompt">${esc(q.prompt||t('orderT'))}</div><div class="order-list" id="orderList">${drawOrder(q)}</div>`;
+  }
+  const needsCheck=['type','underline','blanks','order'].includes(q.type);
+  p.innerHTML=`
+    <div class="player-top">
+      <button class="icon-btn" onclick="exitPlayer()" title="${t('exitT')}">✕</button>
+      <div class="ttl">${esc(PL.ex.title)}</div>
+      <div class="prog"><i style="width:${(PL.i)/n*100}%"></i></div>
+      <div class="sc">⭐ ${PL.correct}/${n}</div>
+    </div>
+    <div class="player-body">
+      <div class="q-card">
+        <div class="qnum">${t('question')} ${PL.i+1} ${t('ofT')} ${n} · ${qLabel(q.type)}</div>
+        ${body}
+        <div class="fb" id="fb"></div>
+      </div>
+    </div>
+    <div class="player-foot">
+      ${needsCheck?`<button class="btn btn-primary btn-lg" id="checkBtn" onclick="checkAnswer()">${t('checkAns')}</button>`:''}
+      <button class="btn btn-yel btn-lg hidden" id="nextBtn" onclick="nextQ()">${PL.i+1<n?t('nextQ')+' →':t('finish')+' 🏁'}</button>
+    </div>`;
+  const ti=document.getElementById('tyIn');
+  if(ti){ti.focus();ti.onkeydown=e=>{if(e.key==='Enter')PL.answered?nextQ():checkAnswer()}}
+}
+function drawOrder(q){
+  return PL.state.order.map((oi,pos)=>`<div class="oi" data-pos="${pos}">
+    <span style="color:var(--muted);font-weight:900">${pos+1}</span>
+    <span style="flex:1">${esc(q.items[oi])}</span>
+    <span class="ar"><button onclick="moveOrd(${pos},-1)">▲</button><button onclick="moveOrd(${pos},1)">▼</button></span>
+  </div>`).join('');
+}
+function moveOrd(pos,d){
+  if(PL.answered)return;
+  const o=PL.state.order;if(pos+d<0||pos+d>=o.length)return;
+  [o[pos],o[pos+d]]=[o[pos+d],o[pos]];
+  document.getElementById('orderList').innerHTML=drawOrder(PL.ex.questions[PL.i]);SFX.tick();
+}
+function tapWord(j){
+  if(PL.answered)return;
+  const el=document.querySelector(`#sent .w[data-j="${j}"]`);
+  const k=PL.state.sel.indexOf(j);
+  if(k>=0){PL.state.sel.splice(k,1);el.classList.remove('sel')}else{PL.state.sel.push(j);el.classList.add('sel')}
+  SFX.flip();
+}
+function tapMatch(side,j){
+  if(PL.answered)return;
+  const st=PL.state,el=document.querySelector(`.mi[data-side="${side}"][data-j="${j}"]`);
+  if(!st.sel){st.sel={side,j};el.classList.add('sel');SFX.flip();return}
+  if(st.sel.side===side){document.querySelectorAll('.mi.sel').forEach(x=>x.classList.remove('sel'));st.sel={side,j};el.classList.add('sel');return}
+  const other=document.querySelector(`.mi[data-side="${st.sel.side}"][data-j="${st.sel.j}"]`);
+  if(st.sel.j===j){
+    el.classList.add('done');other.classList.add('done');st.done++;SFX.right();
+    st.sel=null;
+    if(st.done===PL.ex.questions[PL.i].pairs.length){
+      finishQ(true,t('allMatched'));
+    }
+  }else{
+    el.classList.add('bad');other.classList.remove('sel');
+    setTimeout(()=>el.classList.remove('bad'),420);SFX.wrong();st.sel=null;
+    PL.state.missed=true;
+  }
+}
+function ansMCQ(j,correct){
+  if(PL.answered)return;
+  const right=j===correct;
+  document.querySelectorAll('.opt').forEach(o=>{
+    const oj=+o.dataset.j;
+    if(oj===correct)o.classList.add('right');
+    else if(oj===j)o.classList.add('wrong');
+  });
+  finishQ(right,right?t('correctT'):t('wrongT'));
+}
+function checkAnswer(){
+  if(PL.answered)return;
+  const q=PL.ex.questions[PL.i];let right=false,note='';
+  if(q.type==='type'){
+    const v=norm(document.getElementById('tyIn').value);
+    const acc=String(q.answers||'').split(',').map(norm).filter(Boolean);
+    right=acc.includes(v);
+    const inp=document.getElementById('tyIn');
+    inp.style.borderColor=right?'var(--good)':'var(--bad)';
+    inp.style.background=right?'var(--good-tint)':'var(--bad-tint)';
+    if(!right)note=t('answerWas')+' '+String(q.answers||'').split(',')[0];
+  }
+  else if(q.type==='underline'){
+    const sel=[...PL.state.sel].sort(),cor=[...q.correct].sort();
+    right=sel.length===cor.length&&sel.every((x,i)=>x===cor[i]);
+    q.tokens.forEach((w,j)=>{
+      const el=document.querySelector(`#sent .w[data-j="${j}"]`);
+      el.classList.remove('sel');
+      if(q.correct.includes(j))el.classList.add('ok');
+      else if(PL.state.sel.includes(j))el.classList.add('no');
+    });
+  }
+  else if(q.type==='blanks'){
+    const acc=String(q.answers||'').split(',').map(norm).filter(Boolean);
+    const ins=[...document.querySelectorAll('#blanks input')];
+    right=true;
+    ins.forEach((inp,k)=>{
+      const ok=acc[k]!==undefined?norm(inp.value)===acc[k]:acc.includes(norm(inp.value));
+      inp.classList.add(ok?'ok':'no');if(!ok){right=false;inp.value=inp.value||'—'}
+    });
+    if(!right)note=t('answerWas')+' '+String(q.answers||'');
+  }
+  else if(q.type==='order'){
+    right=PL.state.order.every((v,i)=>v===i);
+    document.querySelectorAll('#orderList .oi').forEach((el,pos)=>{
+      const ok=PL.state.order[pos]===pos;
+      el.style.borderColor=ok?'var(--good)':'var(--bad)';
+      el.style.background=ok?'var(--good-tint)':'var(--bad-tint)';
+    });
+  }
+  finishQ(right,(right?t('correctT'):t('wrongT'))+(note?' · '+note:''));
+}
+function finishQ(right,msg){
+  PL.answered=true;
+  if(right)PL.correct++;
+  (right?SFX.right:SFX.wrong)();
+  const fb=document.getElementById('fb');
+  if(fb){fb.className='fb '+(right?'good':'bad');fb.textContent=(right?'🎉 ':'💡 ')+msg}
+  const cb=document.getElementById('checkBtn');if(cb)cb.classList.add('hidden');
+  const nb=document.getElementById('nextBtn');if(nb)nb.classList.remove('hidden');
+  const sc=document.querySelector('.player-top .sc');if(sc)sc.textContent='⭐ '+PL.correct+'/'+PL.ex.questions.length;
+  if(right)confetti(18);
+}
+function nextQ(){
+  if(PL.i+1<PL.ex.questions.length){PL.i++;drawQ()}
+  else showResults();
+}
+function showResults(){
+  const n=PL.ex.questions.length,pct=Math.round(PL.correct/n*100);
+  const c=klass();
+  c.plays=c.plays||[];
+  c.plays.push({id:uid(),exerciseId:PL.ex.id,title:PL.ex.title,date:Date.now(),correct:PL.correct,total:n});
+  const ex=c.exercises.find(x=>x.id===PL.ex.id);if(ex)ex.lastPlayed=Date.now();
+  save();
+  const emoji=pct>=80?'🏆':pct>=50?'👏':'💪';
+  const line=pct>=80?t('greatJob'):pct>=50?t('goodJob'):t('keepGoing');
+  document.getElementById('player').innerHTML=`
+    <div class="player-body">
+      <div class="res">
+        <div class="big">${emoji}</div>
+        <div class="pct">${pct}%</div>
+        <div class="sum">${line}</div>
+        <div class="res-bars">
+          <div><b style="color:var(--good)">${PL.correct}</b><span style="font-size:.82rem;color:var(--muted)">${t('rightAnswers')}</span></div>
+          <div><b style="color:var(--bad)">${n-PL.correct}</b><span style="font-size:.82rem;color:var(--muted)">${t('wrongAnswers')}</span></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-ghost btn-lg" onclick="exitPlayer()">${t('exitT')}</button>
+          <button class="btn btn-primary btn-lg" onclick="playExercise('${PL.ex.id}')">↻ ${t('playAgain')}</button>
+        </div>
+      </div>
+    </div>`;
+  if(pct>=50){confetti(110);SFX.win()}
+}
+
+/* ============================================================
+   CLASS POINTS
+   ============================================================ */
+const AVATARS=['🦊','🐼','🐯','🦁','🐨','🐸','🐙','🦄','🐵','🐧','🐢','🦉','🐝','🦋','🐬','🦖','🐳','🐰','🐷','🐥','🦅','🐺','🦔','🐴','🌟','🚀','⚡','🍀','🌈','🔥','🍎','🎈'];
+const AV_BG=['#f8e9e7','#fdf5e4','#e8f3ed','#eaf0f7','#faeae6','#f4f0e6'];
+function avBg(i){return AV_BG[i%AV_BG.length]}
+
+function pagePoints(v){
+  const c=klass();c.log=c.log||[];ensureSkills(c);
+  setFab(()=>openAddStudent());
+  const total=c.students.reduce((a,s)=>a+s.points,0);
+  v.innerHTML=`
+  <div class="page-head">
+    <div><h2>⭐ ${t('navPts')}</h2><p>${t('ptsSub')}</p></div>
+    <button class="btn btn-primary" onclick="openAddStudent()">+ ${t('addStudent')}</button>
+  </div>
+  <div class="pts-top">
+    <div class="total-card"><div style="font-size:2rem">🏆</div><div><div class="v">${total}</div><div class="l">${t('classTotal')}</div></div></div>
+    <button class="btn btn-yel btn-lg" onclick="openPicker()">🎲 ${t('randomPicker')}</button>
+    <button class="btn btn-soft" onclick="awardAll()">⭐ ${t('awardAll')}</button>
+    <button class="btn btn-soft" onclick="openSkillsManager()">🎖️ ${t('manageSkills')}</button>
+    <button class="btn btn-ghost" onclick="resetPoints()">↺ ${t('resetPts')}</button>
+  </div>
+  ${c.students.length?`<div class="stu-grid">${c.students.map((s,i)=>`
+    <div class="stu" id="stu_${s.id}" onclick="openStudent('${s.id}')">
+      <button class="del" onclick="event.stopPropagation();delStudent('${s.id}')">✕</button>
+      <div class="av" style="background:${avBg(i)}">${s.avatar}</div>
+      <div class="nm">${esc(s.name)}</div>
+      <div class="pt ${s.points<0?'neg':''}">${s.points}</div>
+      <div class="quick">
+        <button class="m" onclick="pt('${s.id}',-3,event)">−3</button>
+        <button class="m" onclick="pt('${s.id}',-1,event)">−1</button>
+        <button class="p" onclick="pt('${s.id}',1,event)">+1</button>
+        <button class="p" onclick="pt('${s.id}',3,event)">+3</button>
+      </div>
+    </div>`).join('')}</div>`
+  :`<div class="empty"><div class="big">👥</div><h3>${t('noStudents')}</h3><p>${t('noStudentsSub')}</p>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="openAddStudent()">+ ${t('addStudent')}</button></div>`}
+  <div class="panel" style="margin-top:22px">
+    <div class="panel-head"><h3>🕒 ${t('history')}</h3></div>
+    <div id="ptLog">${logHTML()}</div>
+  </div>`;
+}
+function logHTML(){
+  const c=klass(),log=c.log||[];
+  if(!log.length)return `<div class="empty" style="padding:22px"><p>${t('noHistory')}</p></div>`;
+  return [...log].reverse().slice(0,5).map(l=>`
+    <div class="log-row">
+      <div class="d ${l.delta>0?'p':'m'}">${l.delta>0?'+':''}${l.delta}</div>
+      <div>${esc(l.name)}${l.skill?` <span style="color:var(--muted)">· ${l.emoji||''} ${esc(l.skill)}</span>`:''}</div>
+      <div class="tm">${fmtDate(l.ts)}</div>
+    </div>`).join('');
+}
+function openAddStudent(){
+  openSheet(`
+    <div class="sheet-head"><div><h3>${t('addStudent')}</h3><p>${t('pickAvatar')}</p></div><button class="x" onclick="closeSheet()">✕</button></div>
+    <label class="field"><span>${t('studentName')}</span><input class="input" id="stName" autocomplete="off"></label>
+    <div class="field"><span>${t('pickAvatar')}</span>
+      <div class="av-pick" id="avPick">${AVATARS.map((a,i)=>`<button class="${i===0?'on':''}" onclick="pickAv(this)">${a}</button>`).join('')}</div>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" onclick="addStudent()">+ ${t('addStudent')}</button>
+    <div class="hint" style="text-align:center;margin-top:8px">${t('done')} → ${t('close')}</div>
+  `);
+  const i=document.getElementById('stName');i.focus();i.onkeydown=e=>{if(e.key==='Enter')addStudent()};
+  advanceAvatar();
+}
+function pickAv(b){document.querySelectorAll('#avPick button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+function addStudent(){
+  const n=val('stName');if(!n)return toast(t('errFill'),'bad');
+  const av=document.querySelector('#avPick button.on');
+  const c=klass();
+  c.students.push({id:uid(),name:n,avatar:av?av.textContent:'🙂',points:0});
+  save();SFX.plus();toast(t('added')+': '+n,'good');
+  document.getElementById('stName').value='';document.getElementById('stName').focus();
+  advanceAvatar();
+  render();
+}
+/* move the picker to the next avatar nobody in this class is using yet */
+function advanceAvatar(){
+  const used=new Set(klass().students.map(s=>s.avatar));
+  const btns=[...document.querySelectorAll('#avPick button')];
+  if(!btns.length)return;
+  let next=btns.find(b=>!used.has(b.textContent));
+  if(!next){const cur=btns.findIndex(b=>b.classList.contains('on'));next=btns[(cur+1)%btns.length]}
+  btns.forEach(b=>b.classList.remove('on'));next.classList.add('on');
+  next.scrollIntoView({block:'nearest'});
+}
+function delStudent(id){
+  confirmBox(t('confirmDel'),()=>{
+    const c=klass();c.students=c.students.filter(s=>s.id!==id);
+    if(c.grades)delete c.grades[id];
+    save();toast(t('deleted'));render();
+  });
+}
+function pt(id,d,ev,sk){
+  if(ev)ev.stopPropagation();
+  const c=klass(),s=c.students.find(x=>x.id===id);if(!s)return;
+  s.points+=d;c.log=c.log||[];
+  c.log.push({id:uid(),studentId:id,name:s.name,delta:d,ts:Date.now(),skill:sk?sk.name:null,emoji:sk?sk.emoji:null});
+  if(c.log.length>400)c.log=c.log.slice(-400);
+  save();(d>0?SFX.plus:SFX.minus)();
+  const card=document.getElementById('stu_'+id);
+  if(card){
+    card.classList.remove('flash','flashneg');void card.offsetWidth;
+    card.classList.add(d>0?'flash':'flashneg');
+    const pv=card.querySelector('.pt');pv.textContent=s.points;pv.classList.toggle('neg',s.points<0);
+    const r=card.getBoundingClientRect();
+    const f=document.createElement('div');f.className='float-pt';
+    f.textContent=(sk?sk.emoji+' ':'')+(d>0?'+':'')+d;f.style.color=d>0?'var(--good)':'var(--bad)';
+    f.style.left=(r.left+r.width/2-14)+'px';f.style.top=(r.top+16)+'px';
+    document.body.appendChild(f);setTimeout(()=>f.remove(),1150);
+  }
+  const tot=c.students.reduce((a,x)=>a+x.points,0);
+  const tv=document.querySelector('.total-card .v');if(tv)tv.textContent=tot;
+  const lg=document.getElementById('ptLog');if(lg)lg.innerHTML=logHTML();
+}
+function awardAll(){
+  const c=klass();if(!c.students.length)return;
+  c.students.forEach(s=>pt(s.id,1));
+  confetti(50);toast('+1 ⭐','good');
+}
+function resetPoints(){
+  confirmBox(t('resetConfirm'),()=>{const c=klass();c.students.forEach(s=>s.points=0);c.log=[];save();SFX.pop();render()});
+}
+/* random picker */
+let pickTimer=null;
+let recentPicks=[];          /* ids picked lately — kept out of the next draws */
+/* unbiased draw: Math.random alone skews slightly via modulo, so reject the tail */
+function randInt(n){
+  if(n<=0)return 0;
+  if(window.crypto&&crypto.getRandomValues){
+    const lim=Math.floor(0x100000000/n)*n,a=new Uint32Array(1);
+    let v;do{crypto.getRandomValues(a);v=a[0]}while(v>=lim);
+    return v%n;
+  }
+  return Math.floor(Math.random()*n);
+}
+function openPicker(){
+  const c=klass();
+  if(!c.students.length)return toast(t('noStudents'),'bad');
+  openSheet(`
+    <div class="sheet-head"><div><h3>🎲 ${t('randomPicker')}</h3><p>${t('pickStudent')}</p></div><button class="x" onclick="stopPick();closeSheet()">✕</button></div>
+    <div class="picker-stage" id="pStage"><div class="picker-name" id="pName"><span class="ava">🎲</span></div></div>
+    <button class="btn btn-primary btn-block btn-lg" id="pGo" onclick="doPick()">🎲 ${t('pickStudent')}</button>
+  `);
+}
+function stopPick(){if(pickTimer){clearInterval(pickTimer);pickTimer=null}}
+function doPick(){
+  const c=klass(),stage=document.getElementById('pStage'),nm=document.getElementById('pName'),go=document.getElementById('pGo');
+  /* skip whoever came up in the last 3 draws, so nobody repeats too soon */
+  const cool=Math.min(3,Math.max(0,c.students.length-1));
+  recentPicks=recentPicks.filter(id=>c.students.some(s=>s.id===id)).slice(0,cool);
+  let pool=c.students.filter(s=>!recentPicks.includes(s.id));
+  if(!pool.length)pool=c.students;
+  const w=pool[randInt(pool.length)];          /* the winner is drawn up front */
+  recentPicks.unshift(w.id);recentPicks=recentPicks.slice(0,cool);
+
+  stopPick();stage.classList.add('spinning');go.disabled=true;
+  let n=0;const total=22+randInt(8);
+  pickTimer=setInterval(()=>{
+    const s=c.students[randInt(c.students.length)];
+    nm.innerHTML=`<span class="ava">${s.avatar}</span>${esc(s.name)}`;
+    SFX.spin();n++;
+    if(n>=total){
+      stopPick();stage.classList.remove('spinning');
+      nm.innerHTML=`<span class="ava">${w.avatar}</span>${esc(w.name)}`;
+      nm.classList.remove('winner');void nm.offsetWidth;nm.classList.add('winner');
+      SFX.win();confetti(80);go.disabled=false;go.textContent='🎲 '+t('spinAgain');
+      const bar=document.createElement('div');bar.style.cssText='display:flex;gap:9px;margin-top:14px';
+      bar.innerHTML=`<button class="btn btn-soft btn-block" onclick="pt('${w.id}',1);toast('+1 ⭐','good')">+1 ⭐</button>
+                     <button class="btn btn-yel btn-block" onclick="pt('${w.id}',3);toast('+3 ⭐','good')">+3 ⭐</button>`;
+      const old=document.getElementById('pAward');if(old)old.remove();
+      bar.id='pAward';stage.appendChild(bar);
+    }
+  },95);
+}
+
+/* ============================================================
+   SKILLS  —  named, editable reasons for giving points
+   ============================================================ */
+const SKILL_EMOJI=['🙋','💡','🤝','📘','🎯','🏅','🧩','⭐','🌟','🔥','👏','💪','🧠','✏️','📚','🎨','🗣️','⏰','💤','📕','❗','🚫','😤','🙈','🧹','🏃','🎵','🔬','🌱','😀','😐','😞','✅','❌','❤️','👍','👎','🥇','🎁','🔔'];
+/* sensible starting set — every one of these is editable or deletable */
+const DEFAULT_SKILLS=[
+  {kind:'pos',emoji:'🙋',k:'skParticipate',points:1},
+  {kind:'pos',emoji:'💡',k:'skGoodAnswer',points:1},
+  {kind:'pos',emoji:'🤝',k:'skHelping',points:1},
+  {kind:'pos',emoji:'📘',k:'skHomework',points:1},
+  {kind:'pos',emoji:'🎯',k:'skOnTask',points:1},
+  {kind:'pos',emoji:'🧩',k:'skTeamwork',points:1},
+  {kind:'pos',emoji:'🏅',k:'skEffort',points:2},
+  {kind:'pos',emoji:'🌱',k:'skImproved',points:2},
+  {kind:'neg',emoji:'💤',k:'skOffTask',points:-1},
+  {kind:'neg',emoji:'🗣️',k:'skTalking',points:-1},
+  {kind:'neg',emoji:'📕',k:'skNoHw',points:-2},
+  {kind:'neg',emoji:'⏰',k:'skLate',points:-1},
+  {kind:'neg',emoji:'😤',k:'skDisrespect',points:-3},
+];
+function ensureSkills(c){
+  if(c.skills)return;
+  c.skills=DEFAULT_SKILLS.map(s=>({id:uid(),name:t(s.k),emoji:s.emoji,points:s.points,kind:s.kind}));
+  save();
+}
+let SKSTU=null;      /* student being awarded, or null in manager mode */
+let SKTAB='pos';
+
+function openStudent(id){
+  const c=klass();ensureSkills(c);
+  SKSTU=id;SKTAB='pos';drawSkillSheet();
+}
+function openSkillsManager(){
+  const c=klass();ensureSkills(c);
+  SKSTU=null;SKTAB='pos';drawSkillSheet();
+}
+function setSkTab(k){SKTAB=k;drawSkillSheet()}
+
+function drawSkillSheet(){
+  const c=klass();
+  const s=SKSTU?c.students.find(x=>x.id===SKSTU):null;
+  const list=c.skills.filter(k=>k.kind===SKTAB);
+  const idx=s?c.students.indexOf(s):0;
+  openSheet(`
+    ${s?`<div class="stu-head">
+      <div class="big-av" style="background:${avBg(idx)}">${s.avatar}</div>
+      <div style="flex:1;min-width:0">
+        <h3>${esc(s.name)}</h3>
+        <div class="tot"><b style="color:${s.points<0?'var(--bad)':'var(--red)'}">${s.points}</b> ${t('totalPts')}</div>
+      </div>
+      <button class="x" onclick="closeSheet()">✕</button>
+    </div>`
+    :`<div class="sheet-head">
+      <div><h3>🎖️ ${t('manageSkills')}</h3><p>${t('manageHint')}</p></div>
+      <button class="x" onclick="closeSheet()">✕</button>
+    </div>`}
+    <div class="tabs">
+      <button class="${SKTAB==='pos'?'on':''}" onclick="setSkTab('pos')">${t('positiveT')}</button>
+      <button class="${SKTAB==='neg'?'on':''}" onclick="setSkTab('neg')">${t('needsWork')}</button>
+    </div>
+    <div class="skill-grid">
+      ${list.map(k=>`
+        <button class="skill-card" onclick="${s?`giveSkill('${k.id}')`:`openSkillForm('${k.id}')`}">
+          <span class="pen" onclick="event.stopPropagation();openSkillForm('${k.id}')" title="${t('editSkill')}">✏️</span>
+          <span class="v ${k.points>=0?'p':'m'}">${k.points>0?'+':''}${k.points}</span>
+          <span class="e">${k.emoji}</span>
+          <span class="n">${esc(k.name)}</span>
+        </button>`).join('')}
+      <button class="skill-card add" onclick="openSkillForm()">
+        <span class="e">+</span><span class="n">${t('addSkillT')}</span>
+      </button>
+    </div>
+    ${list.length?'':`<div class="hint" style="text-align:center;margin-top:12px">${t('noSkillsYet')}</div>`}
+    ${s?`<div class="hint" style="text-align:center;margin-top:14px">${t('tapSkill')}</div>`:''}
+  `,'wide');
+}
+function giveSkill(id){
+  const c=klass(),k=c.skills.find(x=>x.id===id),s=c.students.find(x=>x.id===SKSTU);
+  if(!k||!s)return;
+  closeSheet();
+  /* let the sheet clear so the card animation is visible */
+  setTimeout(()=>{
+    pt(s.id,k.points,null,k);
+    if(k.points>0)confetti(26);
+    toast(`${k.emoji} ${k.name} ${k.points>0?'+':''}${k.points}`,k.points>=0?'good':'bad');
+  },120);
+}
+
+/* ---------- add / edit / delete a skill ---------- */
+let SKEDIT=null;
+function openSkillForm(id){
+  const c=klass();
+  const ex=id?c.skills.find(x=>x.id===id):null;
+  SKEDIT=ex?{...ex}:{id:null,name:'',emoji:SKILL_EMOJI[0],points:SKTAB==='pos'?1:-1,kind:SKTAB};
+  drawSkillForm();
+}
+function drawSkillForm(){
+  const neg=SKEDIT.kind==='neg';
+  const vals=neg?[-1,-2,-3,-4,-5]:[0,1,2,3,4,5];
+  openSheet(`
+    <div class="sheet-head">
+      <div><h3>${SKEDIT.id?t('editSkill'):t('newSkill')}</h3>
+      <p>${neg?t('needsWork'):t('positiveT')}</p></div>
+      <button class="x" onclick="drawSkillSheet()">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="${!neg?'on':''}" onclick="setSkKind('pos')">${t('positiveT')}</button>
+      <button class="${neg?'on':''}" onclick="setSkKind('neg')">${t('needsWork')}</button>
+    </div>
+    <label class="field"><span>${t('skillName')}</span>
+      <input class="input" id="skName" value="${esc(SKEDIT.name)}" placeholder="${t('skillName')}" autocomplete="off"></label>
+    <div class="field"><span>${t('skillPts')}</span>
+      <div class="pt-seg" id="skPts">${vals.map(v=>`
+        <button class="${v===SKEDIT.points?'on'+(neg?' neg':''):''}" onclick="setSkPts(${v})">${v>0?'+':''}${v}</button>`).join('')}</div>
+    </div>
+    <div class="field"><span>${t('skillIcon')}</span>
+      <div class="emoji-grid" id="skEmoji">${SKILL_EMOJI.map(e=>`
+        <button class="${e===SKEDIT.emoji?'on':''}" onclick="setSkEmoji('${e}')">${e}</button>`).join('')}</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost btn-block" onclick="drawSkillSheet()">${t('cancel')}</button>
+      <button class="btn btn-primary btn-block" onclick="saveSkill()">${t('save')}</button>
+    </div>
+    ${SKEDIT.id?`<button class="btn btn-block btn-sm" style="margin-top:10px;color:var(--bad);background:var(--bad-tint)" onclick="delSkill('${SKEDIT.id}')">🗑 ${t('delSkill')}</button>`:''}
+  `,'wide');
+  const i=document.getElementById('skName');if(i)i.focus();
+  if(i)i.onkeydown=e=>{if(e.key==='Enter')saveSkill()};
+}
+function readSkForm(){const i=document.getElementById('skName');if(i)SKEDIT.name=i.value}
+function setSkKind(k){
+  readSkForm();
+  if(SKEDIT.kind===k)return;
+  SKEDIT.kind=k;SKEDIT.points=k==='neg'?-Math.abs(SKEDIT.points||1)||-1:Math.abs(SKEDIT.points)||1;
+  if(k==='pos'&&SKEDIT.points<0)SKEDIT.points=1;
+  SKTAB=k;drawSkillForm();
+}
+function setSkPts(v){readSkForm();SKEDIT.points=v;drawSkillForm()}
+function setSkEmoji(e){readSkForm();SKEDIT.emoji=e;drawSkillForm()}
+function saveSkill(){
+  readSkForm();
+  const name=(SKEDIT.name||'').trim();
+  if(!name)return toast(t('needSkillName'),'bad');
+  const c=klass();ensureSkills(c);
+  if(SKEDIT.id){
+    const k=c.skills.find(x=>x.id===SKEDIT.id);
+    Object.assign(k,{name,emoji:SKEDIT.emoji,points:SKEDIT.points,kind:SKEDIT.kind});
+  }else{
+    c.skills.push({id:uid(),name,emoji:SKEDIT.emoji,points:SKEDIT.points,kind:SKEDIT.kind});
+  }
+  save();SFX.pop();toast(t('skillSaved'),'good');
+  SKTAB=SKEDIT.kind;drawSkillSheet();
+}
+function delSkill(id){
+  confirmBox(t('confirmDel'),()=>{
+    const c=klass();c.skills=c.skills.filter(x=>x.id!==id);
+    save();toast(t('deleted'));drawSkillSheet();
+  });
+}
+
+/* ============================================================
+   GRADES
+   ============================================================ */
+let gradesUnlocked=false;
+function pageGrades(v){
+  if(!gradesUnlocked){
+    v.innerHTML=`
+    <div class="lock-wrap">
+      <div class="ic">🔒</div>
+      <h2 style="color:var(--red-ink);margin-bottom:8px">${t('locked')}</h2>
+      <p style="color:var(--ink-2);margin-bottom:22px">${t('lockedSub')}</p>
+      <div id="lockErr"></div>
+      <input class="input" id="lockPw" type="password" placeholder="${t('password')}" style="text-align:center;margin-bottom:12px">
+      <button class="btn btn-primary btn-block btn-lg" onclick="tryUnlock()">🔓 ${t('unlock')}</button>
+    </div>`;
+    const i=document.getElementById('lockPw');i.focus();i.onkeydown=e=>{if(e.key==='Enter')tryUnlock()};
+    return;
+  }
+  const c=klass();c.tests=c.tests||[];c.grades=c.grades||{};
+  if(!c.students.length){
+    v.innerHTML=`<div class="page-head"><div><h2>📊 ${t('navGrades')}</h2><p>${t('gradesSub')}</p></div></div>
+    <div class="empty"><div class="big">👥</div><h3>${t('noStudentsGrades')}</h3>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="go('pts')">${t('navPts')}</button></div>`;return;
+  }
+  v.innerHTML=`
+  <div class="page-head">
+    <div><h2>📊 ${t('navGrades')}</h2><p>${t('gradesSub')}</p></div>
+    <div style="display:flex;gap:9px">
+      <button class="btn btn-soft" onclick="addTest()">+ ${t('addTest')}</button>
+      <button class="btn btn-ghost" onclick="gradesUnlocked=false;render()">🔒 ${t('lockAgain')}</button>
+    </div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>${t('student')}</th>
+      <th>${t('participation')}<div style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)">${t('outOf10')}</div></th>
+      <th>${t('behavior')}<div style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)">${t('outOf10')}</div></th>
+      ${c.tests.map(ts=>`<th>${esc(ts.name)}
+        <div style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted)">/${ts.max}
+        <button class="icon-btn danger" style="width:20px;height:20px;font-size:.6rem;display:inline-grid" onclick="rmTest('${ts.id}')">✕</button></div></th>`).join('')}
+      <th>⭐</th><th>${t('totalT')}</th><th>${t('gradeT')}</th>
+    </tr></thead>
+    <tbody>${c.students.map((s,i)=>{
+      const g=c.grades[s.id]||{};
+      const tot=gradeTotal(s,c);
+      return `<tr>
+        <td><div class="stu-cell"><div class="av" style="background:${avBg(i)}">${s.avatar}</div><b>${esc(s.name)}</b></div></td>
+        <td><input class="g-in" type="number" min="0" max="10" value="${g.participation!=null?g.participation:''}" onchange="setGrade('${s.id}','participation',this.value)"></td>
+        <td><input class="g-in" type="number" min="0" max="10" value="${g.behavior!=null?g.behavior:''}" onchange="setGrade('${s.id}','behavior',this.value)"></td>
+        ${c.tests.map(ts=>`<td><input class="g-in" type="number" min="0" max="${ts.max}" value="${(g.scores&&g.scores[ts.id]!=null)?g.scores[ts.id]:''}" onchange="setScore('${s.id}','${ts.id}',this.value)"></td>`).join('')}
+        <td style="font-weight:900;color:var(--yel-ink)">${s.points}</td>
+        <td style="font-weight:900;color:var(--red-ink)">${tot}%</td>
+        <td><span class="grade-pill g${letter(tot)}">${letter(tot)}</span></td>
+      </tr>`}).join('')}</tbody>
+  </table></div>
+  <div class="hint" style="margin-top:12px">${t('participation')} + ${t('behavior')} = 20% · ${t('testsT')} = 80%</div>`;
+}
+function tryUnlock(){
+  const pw=val('lockPw');
+  if(pw===teacher().pw){gradesUnlocked=true;SFX.right();render()}
+  else{document.getElementById('lockErr').innerHTML=`<div class="err">${t('wrongPw')}</div>`;SFX.wrong()}
+}
+function gradeTotal(s,c){
+  const g=c.grades[s.id]||{};
+  const p=Number(g.participation)||0,b=Number(g.behavior)||0;
+  let got=0,max=0;
+  (c.tests||[]).forEach(ts=>{const v=g.scores&&g.scores[ts.id];if(v!=null&&v!=='') {got+=Number(v);max+=Number(ts.max)}});
+  const testPct=max?got/max:0;
+  return Math.round(p+b+testPct*80);
+}
+const letter=p=>p>=90?'A':p>=80?'B':p>=70?'C':p>=60?'D':'F';
+function setGrade(sid,k,v){
+  const c=klass();c.grades[sid]=c.grades[sid]||{};
+  c.grades[sid][k]=v===''?null:Math.max(0,Math.min(10,Number(v)));
+  save();render();
+}
+function setScore(sid,tid,v){
+  const c=klass();c.grades[sid]=c.grades[sid]||{};c.grades[sid].scores=c.grades[sid].scores||{};
+  c.grades[sid].scores[tid]=v===''?null:Number(v);
+  save();render();
+}
+function addTest(){
+  openSheet(`<div class="sheet-head"><div><h3>${t('addTest')}</h3></div><button class="x" onclick="closeSheet()">✕</button></div>
+  <label class="field"><span>${t('testName')}</span><input class="input" id="tsName"></label>
+  <label class="field"><span>${t('maxScore')}</span><input class="input" id="tsMax" type="number" value="20"></label>
+  <button class="btn btn-primary btn-block" onclick="saveTest()">${t('create')}</button>`);
+  document.getElementById('tsName').focus();
+}
+function saveTest(){
+  const n=val('tsName'),m=Number(val('tsMax'))||20;
+  if(!n)return toast(t('errFill'),'bad');
+  const c=klass();c.tests=c.tests||[];c.tests.push({id:uid(),name:n,max:m});
+  save();closeSheet();SFX.pop();toast(t('saved'),'good');render();
+}
+function rmTest(id){
+  confirmBox(t('confirmDel'),()=>{
+    const c=klass();c.tests=c.tests.filter(x=>x.id!==id);
+    Object.values(c.grades||{}).forEach(g=>{if(g.scores)delete g.scores[id]});
+    save();render();
+  });
+}
+</script>
+<script>
+/* ============================================================
+   EXERCISE GAMES
+   ============================================================ */
+const MODES=[
+  {id:'board',e:'🎯',k:'teamBoard',d:'teamBoardD'},
+  {id:'wheel',e:'🎡',k:'spinWheel',d:'spinWheelD'},
+  {id:'match',e:'🔗',k:'matchUp',d:'matchUpD'},
+  {id:'race',e:'⏱️',k:'quizRace',d:'quizRaceD'},
+];
+const modeOf=id=>MODES.find(m=>m.id===id)||MODES[0];
+
+function pageGames(v){
+  const c=klass();c.games=c.games||[];
+  setFab(()=>openGameEditor());
+  v.innerHTML=`
+  <div class="page-head">
+    <div><h2>🎮 ${t('navGames')}</h2><p>${t('gamesSub')}</p></div>
+    <button class="btn btn-primary" onclick="openGameEditor()">+ ${t('newGame')}</button>
+  </div>
+  ${c.games.length?`<div class="game-grid">${c.games.map(g=>{
+    const m=modeOf(g.mode);
+    return `<div class="g-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="hero-ic">${m.e}</div>
+        <button class="icon-btn danger" onclick="delGame('${g.id}')">🗑</button>
+      </div>
+      <h4>${esc(g.title)}</h4>
+      <div style="font-size:.84rem;color:var(--muted);margin-bottom:6px">${t(m.k)} · ${gameQs(g).length} ${t('qsCount')}</div>
+      <div class="meta">${g.mode==='board'||g.mode==='wheel'?`<span class="chip chip-yel">${g.teams} ${t('teamsT')}</span>`:''}</div>
+      <div class="acts">
+        <button class="btn btn-primary btn-sm btn-block" onclick="startGame('${g.id}')">▶ ${t('startGame')}</button>
+        <button class="btn btn-soft btn-sm" onclick="openGameEditor('${g.id}')">${t('edit')}</button>
+      </div>
+    </div>`}).join('')}</div>`
+  :`<div class="empty"><div class="big">🎮</div><h3>${t('noGames')}</h3><p>${t('noGamesSub')}</p>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="openGameEditor()">+ ${t('newGame')}</button></div>`}`;
+}
+function delGame(id){confirmBox(t('confirmDel'),()=>{const c=klass();c.games=c.games.filter(g=>g.id!==id);save();toast(t('deleted'));render()})}
+
+/* turn any exercise question into {q,a} */
+function qToQA(q){
+  if(q.type==='mcq')return{q:q.prompt,a:q.options[q.correct]||''};
+  if(q.type==='tf')return{q:q.prompt,a:q.correct?t('trueT'):t('falseT')};
+  if(q.type==='type')return{q:q.prompt,a:String(q.answers||'').split(',')[0]||''};
+  if(q.type==='blanks')return{q:String(q.text||'').replace(/\*\*\*/g,'______'),a:String(q.answers||'')};
+  if(q.type==='underline')return{q:(q.prompt?q.prompt+' — ':'')+(q.sentence||''),a:(q.correct||[]).map(i=>q.tokens[i]).join(', ')};
+  if(q.type==='order')return{q:(q.prompt||t('orderT'))+': '+shuffle(q.items).join(' / '),a:q.items.join(' → ')};
+  if(q.type==='match')return{q:(q.prompt||t('matchP'))+': '+q.pairs.map(p=>p.l).join(', '),a:q.pairs.map(p=>p.l+' = '+p.r).join(' · ')};
+  return{q:q.prompt||'',a:''};
+}
+function gameQs(g){
+  if(g.source==='exercise'){
+    const ex=klass().exercises.find(x=>x.id===g.exerciseId);
+    return ex?ex.questions.map(qToQA).filter(x=>x.q):[];
+  }
+  return (g.qa||[]).filter(x=>x.q&&x.a);
+}
+
+/* ---------- game builder ---------- */
+let GDRAFT=null;
+function openGameEditor(id){
+  const c=klass();
+  const g=id?c.games.find(x=>x.id===id):null;
+  GDRAFT=g?JSON.parse(JSON.stringify(g)):{id:uid(),title:'',mode:'board',source:'exercise',exerciseId:(c.exercises[0]||{}).id||'',qa:[{q:'',a:''},{q:'',a:''}],teams:2,created:Date.now()};
+  drawGameEditor();
+}
+function drawGameEditor(){
+  const c=klass();
+  openSheet(`
+    <div class="sheet-head"><div><h3>${t('newGame')}</h3><p>${t('gamesSub')}</p></div><button class="x" onclick="closeSheet()">✕</button></div>
+    <label class="field"><span>${t('gameName')}</span><input class="input" id="gTitle" value="${esc(GDRAFT.title)}" oninput="GDRAFT.title=this.value"></label>
+    <div class="field"><span>${t('gameMode')}</span>
+      <div class="mode-pick">${MODES.map(m=>`<button class="mode ${GDRAFT.mode===m.id?'on':''}" onclick="setMode('${m.id}')">
+        <span class="e">${m.e}</span><span class="n">${t(m.k)}</span><span class="d">${t(m.d)}</span></button>`).join('')}</div>
+    </div>
+    ${(GDRAFT.mode==='board'||GDRAFT.mode==='wheel')?`<label class="field"><span>${t('teamCount')}</span>
+      <select class="input" id="gTeams" onchange="GDRAFT.teams=+this.value">${[2,3,4].map(n=>`<option value="${n}" ${GDRAFT.teams===n?'selected':''}>${n} ${t('teamsT')}</option>`).join('')}</select></label>`:''}
+    <div class="field"><span>${t('questionSource')}</span>
+      <div class="tabs">
+        <button class="${GDRAFT.source==='exercise'?'on':''}" onclick="setSource('exercise')">${t('fromExercise')}</button>
+        <button class="${GDRAFT.source==='own'?'on':''}" onclick="setSource('own')">${t('writeOwn')}</button>
+      </div>
+    </div>
+    ${GDRAFT.source==='exercise'
+      ? (c.exercises.length?`<label class="field"><span>${t('pickExercise')}</span>
+          <select class="input" onchange="GDRAFT.exerciseId=this.value">${c.exercises.map(x=>`<option value="${x.id}" ${GDRAFT.exerciseId===x.id?'selected':''}>${esc(x.title)} (${x.questions.length})</option>`).join('')}</select></label>`
+        :`<div class="err">${t('noExForGame')}</div>`)
+      : `<div id="qaList">${(GDRAFT.qa||[]).map((p,i)=>`
+          <div class="opt-row">
+            <input class="input qa-q" placeholder="${t('questionText')} ${i+1}" value="${esc(p.q)}">
+            <input class="input qa-a" placeholder="${t('qAnswer')}" value="${esc(p.a)}">
+            ${GDRAFT.qa.length>2?`<button class="icon-btn danger" onclick="rmQA(${i})">✕</button>`:''}
+          </div>`).join('')}</div>
+        <button class="btn btn-soft btn-sm" onclick="addQA()">+ ${t('addQA')}</button>`}
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-ghost btn-block" onclick="closeSheet()">${t('cancel')}</button>
+      <button class="btn btn-primary btn-block" onclick="saveGame()">${t('save')}</button>
+    </div>
+  `,'wide');
+}
+function syncQA(){
+  const w=document.getElementById('qaList');if(!w)return;
+  GDRAFT.qa=[...w.querySelectorAll('.opt-row')].map(r=>({q:r.querySelector('.qa-q').value.trim(),a:r.querySelector('.qa-a').value.trim()}));
+}
+function setMode(m){syncQA();GDRAFT.title=val('gTitle')||GDRAFT.title;GDRAFT.mode=m;drawGameEditor()}
+function setSource(s){syncQA();GDRAFT.title=val('gTitle')||GDRAFT.title;GDRAFT.source=s;drawGameEditor()}
+function addQA(){syncQA();GDRAFT.qa.push({q:'',a:''});GDRAFT.title=val('gTitle')||GDRAFT.title;drawGameEditor()}
+function rmQA(i){syncQA();GDRAFT.qa.splice(i,1);GDRAFT.title=val('gTitle')||GDRAFT.title;drawGameEditor()}
+function saveGame(){
+  syncQA();
+  GDRAFT.title=val('gTitle').trim()||GDRAFT.title;
+  if(!GDRAFT.title)return toast(t('needTitle'),'bad');
+  if(GDRAFT.source==='exercise'){
+    if(!GDRAFT.exerciseId)return toast(t('needExercise'),'bad');
+  }else if(gameQs(GDRAFT).length<2)return toast(t('needQA'),'bad');
+  const c=klass();c.games=c.games||[];
+  const i=c.games.findIndex(x=>x.id===GDRAFT.id);
+  if(i>=0)c.games[i]=GDRAFT;else c.games.push(GDRAFT);
+  save();closeSheet();SFX.right();toast(t('saved'),'good');render();
+}
+
+/* ============================================================
+   GAME RUNNERS
+   ============================================================ */
+let G=null;
+const TEAM_COL=['#9b2230','#e0b354','#5c9b78','#7b8fb5'];
+function startGame(id){
+  const c=klass(),g=c.games.find(x=>x.id===id);
+  const qs=gameQs(g);
+  if(qs.length<2)return toast(t('needQA'),'bad');
+  G={g,qs:shuffle(qs),teams:Array.from({length:g.teams||2},(_,i)=>({n:t('teamN')+' '+(i+1),s:0})),turn:0,used:[],cur:null,revealed:false,t0:Date.now(),timer:null};
+  document.getElementById('player').classList.add('show');
+  if(g.mode==='board')drawBoard();
+  else if(g.mode==='wheel')drawWheel();
+  else if(g.mode==='match')drawMatch();
+  else drawRace();
+}
+function exitGame(){
+  if(G&&G.timer)clearInterval(G.timer);
+  document.getElementById('player').classList.remove('show');G=null;render();
+}
+function gameTop(extra){
+  return `<div class="player-top">
+    <button class="icon-btn" onclick="exitGame()">✕</button>
+    <div class="ttl">${esc(G.g.title)}</div>
+    <div style="flex:1"></div>
+    <div class="sc">${extra||''}</div>
+  </div>`;
+}
+function teamBar(){
+  return `<div class="teams">${G.teams.map((tm,i)=>`
+    <div class="team ${i===G.turn?'on':''}">
+      <div class="n" style="color:${i===G.turn?TEAM_COL[i]:''}">${esc(tm.n)}</div>
+      <div class="s" style="color:${TEAM_COL[i]}">${tm.s}</div>
+    </div>`).join('')}</div>`;
+}
+
+/* ---------- 1. TEAM BOARD (Bamboozle style) ---------- */
+function drawBoard(){
+  const p=document.getElementById('player');
+  const n=G.qs.length,cols=Math.min(5,Math.ceil(Math.sqrt(n))),rows=Math.ceil(n/cols);
+  /* keep the whole board on screen: tiles are 1.25:1, so cap the width from the height we have */
+  const bw=Math.min(900,Math.round(window.innerHeight*0.52*1.25*cols/rows));
+  p.innerHTML=gameTop(`${t('turnOf')} ${esc(G.teams[G.turn].n)}`)+`
+    <div class="player-body">
+      <div style="width:100%;max-width:960px">
+        ${teamBar()}
+        <div style="color:var(--muted);font-weight:800;margin-bottom:14px">${t('pickTile')}</div>
+        <div class="board" style="grid-template-columns:repeat(${cols},1fr);max-width:${bw}px">
+          ${G.qs.map((q,i)=>`<button class="tile ${G.used.includes(i)?'used':''}" onclick="openTile(${i})">${i+1}</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  if(G.used.length===n)setTimeout(gameOver,500);
+}
+function openTile(i){
+  if(G.used.includes(i))return;
+  G.cur=i;G.revealed=false;SFX.pop();drawTileQ();
+}
+function drawTileQ(){
+  const q=G.qs[G.cur],p=document.getElementById('player');
+  p.innerHTML=gameTop(`${t('turnOf')} ${esc(G.teams[G.turn].n)}`)+`
+    <div class="player-body">
+      <div class="q-card">
+        <div class="qnum">${t('question')} ${G.cur+1}</div>
+        <div class="prompt">${esc(q.q)}</div>
+        ${G.revealed?`<div style="font-size:clamp(1.1rem,3vw,1.7rem);font-weight:900;color:var(--good);background:var(--good-tint);padding:18px 24px;border-radius:20px;display:inline-block">${esc(q.a)}</div>`:''}
+      </div>
+    </div>
+    <div class="player-foot">
+      ${G.revealed
+        ? `<button class="btn btn-primary btn-lg" onclick="judge(true)">✅ ${t('correctT')}</button>
+           <button class="btn btn-ghost btn-lg" onclick="judge(false)">❌ ${t('wrongT')}</button>`
+        : `<button class="btn btn-yel btn-lg" onclick="G.revealed=true;SFX.flip();drawTileQ()">👁 ${t('qAnswer')}</button>`}
+      <button class="btn btn-ghost btn-lg" onclick="drawBoard()">← ${t('back')}</button>
+    </div>`;
+}
+function judge(right){
+  const tm=G.teams[G.turn];
+  if(right){
+    const prizes=[1,1,2,2,3,3,5,-2,0];
+    const pr=prizes[(Math.random()*prizes.length)|0];
+    tm.s+=pr;SFX.right();confetti(40);
+    const p=document.getElementById('player');
+    p.innerHTML=gameTop('')+`<div class="player-body"><div class="q-card">
+      <div class="big" style="font-size:4rem">${pr>2?'🎉':pr<0?'😬':'👍'}</div>
+      <div class="prize">${t('mysteryPts')} ${pr>0?'+':''}${pr}</div>
+      <div style="margin-top:14px;font-weight:800;color:var(--ink-2)">${esc(tm.n)} → ${tm.s}</div>
+    </div></div>
+    <div class="player-foot"><button class="btn btn-primary btn-lg" onclick="afterTile()">${t('nextQ')} →</button></div>`;
+  }else{SFX.wrong();afterTile()}
+}
+function afterTile(){
+  G.used.push(G.cur);G.turn=(G.turn+1)%G.teams.length;drawBoard();
+}
+function gameOver(){
+  const best=Math.max(...G.teams.map(x=>x.s));
+  const winners=G.teams.filter(x=>x.s===best);
+  const p=document.getElementById('player');
+  p.innerHTML=`<div class="player-body"><div class="res">
+    <div class="big">🏆</div>
+    <div class="pct" style="font-size:2.2rem">${winners.length>1?t('tie'):t('winnerIs')+' '+esc(winners[0].n)}</div>
+    <div class="sum">${G.teams.map(x=>esc(x.n)+': '+x.s).join(' · ')}</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost btn-lg" onclick="exitGame()">${t('exitT')}</button>
+      <button class="btn btn-primary btn-lg" onclick="startGame('${G.g.id}')">↻ ${t('playAgain')}</button>
+    </div>
+  </div></div>`;
+  confetti(130);SFX.win();
+}
+
+/* ---------- 2. SPIN WHEEL ---------- */
+function drawWheel(){
+  const p=document.getElementById('player');
+  const n=G.qs.length,seg=360/n;
+  const cols=['#b6333f','#e0b354','#7f1d2a','#eccf8e','#c9545e','#f0d9a0'];
+  const grad=G.qs.map((q,i)=>`${cols[i%cols.length]} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
+  p.innerHTML=gameTop(`${t('turnOf')} ${esc(G.teams[G.turn].n)}`)+`
+    <div class="player-body">
+      <div style="width:100%;max-width:700px">
+        ${teamBar()}
+        <div class="wheel-wrap">
+          <div class="wheel-pin">▼</div>
+          <div class="wheel" id="wheel" style="background:conic-gradient(${grad});transform:rotate(${G.wheelRot||0}deg)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="player-foot">
+      <button class="btn btn-primary btn-lg" id="spinBtn" onclick="spinWheel()">🎡 ${t('spinT')}</button>
+      ${G.used.length?`<button class="btn btn-ghost btn-lg" onclick="gameOver()">${t('finish')}</button>`:''}
+    </div>`;
+}
+function spinWheel(){
+  const n=G.qs.length,seg=360/n;
+  const avail=G.qs.map((q,i)=>i).filter(i=>!G.used.includes(i));
+  if(!avail.length)return gameOver();
+  const pick=avail[(Math.random()*avail.length)|0];
+  const target=360*5+(360-(pick*seg+seg/2));
+  const w=document.getElementById('wheel'),b=document.getElementById('spinBtn');
+  G.wheelRot=(G.wheelRot||0);
+  const base=G.wheelRot-(G.wheelRot%360);
+  G.wheelRot=base+target;
+  w.style.transform=`rotate(${G.wheelRot}deg)`;
+  b.disabled=true;
+  let ticks=0;const ti=setInterval(()=>{SFX.spin();if(++ticks>22)clearInterval(ti)},150);
+  setTimeout(()=>{clearInterval(ti);G.cur=pick;G.revealed=false;drawWheelQ()},4300);
+}
+function drawWheelQ(){
+  const q=G.qs[G.cur],p=document.getElementById('player');
+  p.innerHTML=gameTop(`${t('turnOf')} ${esc(G.teams[G.turn].n)}`)+`
+    <div class="player-body"><div class="q-card">
+      <div class="qnum">🎡 ${t('question')} ${G.cur+1}</div>
+      <div class="prompt">${esc(q.q)}</div>
+      ${G.revealed?`<div style="font-size:clamp(1.1rem,3vw,1.7rem);font-weight:900;color:var(--good);background:var(--good-tint);padding:18px 24px;border-radius:20px;display:inline-block">${esc(q.a)}</div>`:''}
+    </div></div>
+    <div class="player-foot">
+      ${G.revealed
+        ? `<button class="btn btn-primary btn-lg" onclick="wheelJudge(true)">✅ +1</button>
+           <button class="btn btn-ghost btn-lg" onclick="wheelJudge(false)">❌</button>`
+        : `<button class="btn btn-yel btn-lg" onclick="G.revealed=true;SFX.flip();drawWheelQ()">👁 ${t('qAnswer')}</button>`}
+    </div>`;
+}
+function wheelJudge(right){
+  if(right){G.teams[G.turn].s++;SFX.right();confetti(30)}else SFX.wrong();
+  G.used.push(G.cur);G.turn=(G.turn+1)%G.teams.length;
+  if(G.used.length===G.qs.length)return gameOver();
+  drawWheel();
+}
+
+/* ---------- 3. MATCH UP ---------- */
+function drawMatch(){
+  const qs=G.qs.slice(0,8);
+  G.pairs=qs;G.cards=shuffle([...qs.map((x,i)=>({txt:x.q,i,side:'q'})),...qs.map((x,i)=>({txt:x.a,i,side:'a'}))]);
+  G.sel=null;G.found=0;G.t0=Date.now();
+  const p=document.getElementById('player');
+  const cols=Math.min(4,Math.ceil(Math.sqrt(G.cards.length))),mrows=Math.ceil(G.cards.length/cols);
+  const mw=Math.min(820,Math.round(window.innerHeight*0.56*1.3*cols/mrows));
+  p.innerHTML=gameTop(`⏱ <span id="mTime">0s</span>`)+`
+    <div class="player-body">
+      <div style="width:100%;max-width:820px">
+        <div style="color:var(--muted);font-weight:800;margin-bottom:14px">${t('matchUpD')}</div>
+        <div class="mem-grid" style="grid-template-columns:repeat(${cols},1fr);max-width:${mw}px">
+          ${G.cards.map((c,k)=>`<button class="mem" data-k="${k}" onclick="tapMem(${k})">${esc(c.txt)}</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  if(G.timer)clearInterval(G.timer);
+  G.timer=setInterval(()=>{const el=document.getElementById('mTime');if(el)el.textContent=Math.floor((Date.now()-G.t0)/1000)+'s'},500);
+}
+function tapMem(k){
+  const card=G.cards[k],el=document.querySelector(`.mem[data-k="${k}"]`);
+  if(!el||el.classList.contains('gone'))return;
+  if(G.sel===null){G.sel=k;el.classList.add('sel');SFX.flip();return}
+  if(G.sel===k){el.classList.remove('sel');G.sel=null;return}
+  const prev=G.cards[G.sel],pel=document.querySelector(`.mem[data-k="${G.sel}"]`);
+  if(prev.i===card.i&&prev.side!==card.side){
+    el.classList.add('gone');pel.classList.add('gone');SFX.right();G.found++;G.sel=null;
+    if(G.found===G.pairs.length){
+      clearInterval(G.timer);
+      const secs=Math.floor((Date.now()-G.t0)/1000);
+      setTimeout(()=>{
+        document.getElementById('player').innerHTML=`<div class="player-body"><div class="res">
+          <div class="big">🏁</div><div class="pct">${secs}s</div><div class="sum">${t('allMatched')}</div>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button class="btn btn-ghost btn-lg" onclick="exitGame()">${t('exitT')}</button>
+            <button class="btn btn-primary btn-lg" onclick="startGame('${G.g.id}')">↻ ${t('playAgain')}</button></div>
+        </div></div>`;
+        confetti(120);SFX.win();
+      },420);
+    }
+  }else{
+    el.classList.add('bad');SFX.wrong();
+    setTimeout(()=>{el.classList.remove('bad');pel.classList.remove('sel')},420);
+    G.sel=null;
+  }
+}
+
+/* ---------- 4. QUIZ RACE ---------- */
+function drawRace(){
+  G.i=0;G.score=0;G.left=20;G.revealed=false;
+  raceQ();
+}
+function raceQ(){
+  if(G.timer)clearInterval(G.timer);
+  if(G.i>=G.qs.length)return raceEnd();
+  G.left=20;G.revealed=false;
+  const q=G.qs[G.i],p=document.getElementById('player');
+  p.innerHTML=gameTop(`⭐ ${G.score}/${G.qs.length}`)+`
+    <div class="player-body"><div class="q-card">
+      <div class="qnum">${t('question')} ${G.i+1} ${t('ofT')} ${G.qs.length}</div>
+      <div style="font-size:3rem;font-weight:900;color:var(--red);margin-bottom:10px" id="rTime">20</div>
+      <div class="prompt">${esc(q.q)}</div>
+      <div id="rAns"></div>
+    </div></div>
+    <div class="player-foot" id="rFoot">
+      <button class="btn btn-yel btn-lg" onclick="raceReveal()">👁 ${t('qAnswer')}</button>
+    </div>`;
+  G.timer=setInterval(()=>{
+    G.left--;
+    const el=document.getElementById('rTime');
+    if(el){el.textContent=G.left;if(G.left<=5){el.style.color='var(--bad)';SFX.tick()}}
+    if(G.left<=0){clearInterval(G.timer);raceReveal(true)}
+  },1000);
+}
+function raceReveal(timeUp){
+  if(G.timer)clearInterval(G.timer);
+  if(G.revealed)return;G.revealed=true;SFX.flip();
+  const q=G.qs[G.i];
+  document.getElementById('rAns').innerHTML=`<div style="font-size:clamp(1.1rem,3vw,1.7rem);font-weight:900;color:var(--good);background:var(--good-tint);padding:16px 22px;border-radius:20px;display:inline-block;margin-top:8px">${esc(q.a)}</div>
+  ${timeUp?`<div class="fb bad">⏰ ${t('timeLeft')} 0</div>`:''}`;
+  document.getElementById('rFoot').innerHTML=`
+    <button class="btn btn-primary btn-lg" onclick="raceNext(true)">✅ ${t('correctT')}</button>
+    <button class="btn btn-ghost btn-lg" onclick="raceNext(false)">❌ ${t('wrongT')}</button>`;
+}
+function raceNext(right){
+  if(right){G.score++;SFX.right();confetti(25)}else SFX.wrong();
+  G.i++;raceQ();
+}
+function raceEnd(){
+  const pct=Math.round(G.score/G.qs.length*100);
+  document.getElementById('player').innerHTML=`<div class="player-body"><div class="res">
+    <div class="big">${pct>=80?'🏆':pct>=50?'👏':'💪'}</div>
+    <div class="pct">${pct}%</div>
+    <div class="sum">${G.score} / ${G.qs.length} ${t('rightAnswers')}</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost btn-lg" onclick="exitGame()">${t('exitT')}</button>
+      <button class="btn btn-primary btn-lg" onclick="startGame('${G.g.id}')">↻ ${t('playAgain')}</button></div>
+  </div></div>`;
+  if(pct>=50){confetti(120);SFX.win()}
+}
+</script>
+<script>
+/* ============================================================
+   BOOT
+   ============================================================ */
+(function boot(){
+  load();
+  document.getElementById('heroLogo').innerHTML=ronaLogo();
+  document.getElementById('miniLogo').innerHTML=`<span style="display:inline-block;width:24px;height:29px;vertical-align:middle">${ronaLogo()}</span>`;
+  setLang(DB.lang||'en');
+
+  /* scroll reveal */
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})
+  },{threshold:.14,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*90)+'ms';io.observe(el)});
+
+  /* sticky landing bar */
+  const lt=document.getElementById('landTop');
+  const onScroll=()=>lt.classList.toggle('solid',window.scrollY>80);
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  /* resume session */
+  if(DB.session&&teacher()){
+    if(klass()&&klass().teacherId===teacher().id){
+      document.getElementById('landing').style.display='none';
+      document.getElementById('app').classList.add('show');
+      renderNav();go('home');
+    }else{openClassPicker(true)}
+  }
+
+  /* unlock audio on first gesture */
+  const wake=()=>{ac();document.removeEventListener('pointerdown',wake)};
+  document.addEventListener('pointerdown',wake);
+
+  /* esc closes things */
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Escape')return;
+    if(document.getElementById('player').classList.contains('show')){G?exitGame():exitPlayer();return}
+    if(document.getElementById('ov').classList.contains('show'))closeSheet();
+  });
+})();
+</script>
+</body>
+</html>
