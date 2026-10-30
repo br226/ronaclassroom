@@ -2859,9 +2859,9 @@ function vocabQs(P,n){
 }
 
 /* ----- UI ----- */
-Object.assign(I18N.en,{raiTabAsk:'Ask RonaAi',raiNoSetup:'RonaAi is not connected yet.',raiPrivacy:"Don't type student names or private details."});
-Object.assign(I18N.ar,{raiTabAsk:'اسأل RonaAi',raiNoSetup:'RonaAi غير متصل بعد.',raiPrivacy:'لا تكتب أسماء الطلاب أو تفاصيل خاصة.'});
-Object.assign(I18N.ku,{raiTabAsk:'لە RonaAi بپرسە',raiNoSetup:'RonaAi هێشتا بەستراوە نییە.',raiPrivacy:'ناوی قوتابی یان زانیاری تایبەت مەنووسە.'});
+Object.assign(I18N.en,{raiSlow:'RonaAi is slow right now. Try again in a moment, or use fewer questions.',raiTabAsk:'Ask RonaAi',raiNoSetup:'RonaAi is not connected yet.',raiPrivacy:"Don't type student names or private details."});
+Object.assign(I18N.ar,{raiSlow:'RonaAi بطيء الآن. حاول بعد قليل أو قلّل عدد الأسئلة.',raiTabAsk:'اسأل RonaAi',raiNoSetup:'RonaAi غير متصل بعد.',raiPrivacy:'لا تكتب أسماء الطلاب أو تفاصيل خاصة.'});
+Object.assign(I18N.ku,{raiSlow:'RonaAi ئێستا هێدییە. دووبارە هەوڵبدەرەوە یان پرسیاری کەمتر هەڵبژێرە.',raiTabAsk:'لە RonaAi بپرسە',raiNoSetup:'RonaAi هێشتا بەستراوە نییە.',raiPrivacy:'ناوی قوتابی یان زانیاری تایبەت مەنووسە.'});
 function normAI(j){
   const out=[],s=x=>String(x==null?'':x).trim().slice(0,200),arr=x=>[].concat(x==null?[]:x);
   (Array.isArray(j.questions)?j.questions:[]).slice(0,12).forEach(q=>{
@@ -2912,7 +2912,7 @@ window.runRonaAi=async function(){
     try{
       const {data,error}=await window.sb.functions.invoke('rona-ai',{body:{prompt:p,count:RCOUNT,subject:(teacher()||{}).subject||''}});
       if(error){let code='';try{code=(await error.context.json()).error}catch(e){}
-        return raiFail(code==='daily_limit'?t('raiLimit'):code==='no_key'?t('raiNoSetup'):t('raiFail'))}
+        return raiFail(code==='daily_limit'?t('raiLimit'):code==='ai_timeout'?t('raiSlow'):code==='no_key'?t('raiNoSetup'):t('raiFail'))}
       const qs=normAI(data||{});if(!qs.length)return raiFail(t('raiFail'));
       raiOpen(qs,String((data&&data.title)||p).slice(0,80),String((data&&data.unit)||'').slice(0,60));
     }catch(e){console.warn(e);raiFail(t('raiFail'))}
